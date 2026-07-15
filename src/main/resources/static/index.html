@@ -1,0 +1,1125 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>健康状态与心路分享社区 ✧</title>
+    <style>
+        :root {
+            /* 🎨 已降低饱和度的复古边框颜色 (柔和的烟熏紫/莫兰迪紫) */
+            --win-border-outer: #705b93; 
+            --win-border-inner: #5e4c7d; 
+            
+            /* 🎀 再次大幅度降低透明度的背景色组合 (从 0.7 降至 0.35，极度轻盈透明) */
+            --win-title-bg: rgba(230, 216, 255, 0.5);   
+            --window-bg: rgba(255, 246, 255, 0.35);    
+            --input-bg: rgba(255, 255, 255, 0.35);      
+            
+            --bubble-od: rgba(255, 182, 193, 0.45);     
+            --bubble-common: rgba(216, 191, 216, 0.45); 
+            --bubble-mood: rgba(182, 227, 255, 0.45); 
+            
+            --text-color: #3b3a4a;       
+            --btn-pink: rgba(220, 174, 230, 0.6);       
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Zpix', 'SimSun', 'NSimSun', 'DotGothic16', monospace;
+            image-rendering: pixelated; 
+        }
+
+        body {
+            background-image: url('bg.jpg'); 
+            background-repeat: no-repeat;
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            background-color: #f7a8f4; 
+            color: var(--text-color);
+            min-height: 100vh;
+            text-shadow: 1px 1px 0px rgba(255,255,255,0.7);
+            transition: filter 0.5s ease, background-color 0.5s ease; 
+            padding: 10px;
+        }
+
+        /* 滤镜与动效 */
+        @keyframes selectiveColorSpin {
+            0% { filter: hue-rotate(0deg); background-color: rgba(240, 160, 165, 0.45); }
+            20% { filter: hue-rotate(40deg); background-color: rgba(210, 165, 240, 0.45); }
+            40% { filter: hue-rotate(90deg); background-color: rgba(165, 190, 245, 0.45); }
+            60% { filter: hue-rotate(-40deg); background-color: rgba(245, 175, 215, 0.45); }
+            80% { filter: hue-rotate(-80deg); background-color: rgba(245, 225, 175, 0.45); }
+            100% { filter: hue-rotate(-110deg); background-color: rgba(245, 195, 160, 0.45); }
+        }
+        .psychedelic-mode { animation: selectiveColorSpin 7s linear infinite; }
+
+        @keyframes intenseShake {
+            0% { transform: translate(0, 0) rotate(0deg); }
+            10% { transform: translate(-2px, 1.5px) rotate(-0.5deg); }
+            20% { transform: translate(3px, -2px) rotate(1deg); }
+            30% { transform: translate(-1.5px, -3px) rotate(-1deg); }
+            40% { transform: translate(2.5px, 2px) rotate(0.5deg); }
+            50% { transform: translate(-3px, 1px) rotate(-0.5deg); }
+            60% { transform: translate(2px, -2.5px) rotate(1deg); }
+            70% { transform: translate(-2.5px, -1.5px) rotate(-1deg); }
+            80% { transform: translate(3px, 3px) rotate(0.5deg); }
+            90% { transform: translate(-2px, 2px) rotate(-0.5deg); }
+            100% { transform: translate(0, 0) rotate(0deg); }
+        }
+        .all-box-shake { animation: intenseShake 0.12s linear infinite !important; }
+
+        /* 复古框基础样式 */
+        .retro-window {
+            background-color: var(--window-bg);
+            border: 4px solid var(--win-border-outer); 
+            box-shadow: 
+                inset 0 0 0 2px var(--win-border-inner), 
+                0 0 0 2px var(--win-border-inner),
+                4px 4px 0px rgba(94, 76, 125, 0.1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            backdrop-filter: blur(8px); 
+            -webkit-backdrop-filter: blur(8px);
+        }
+
+        .retro-title-bar {
+            background: var(--win-title-bg);
+            border-bottom: 4px solid var(--win-border-inner);
+            padding: 6px 8px; 
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: bold;
+            color: var(--win-border-inner);
+            font-size: 13px;
+            user-select: none;
+            text-shadow: none;
+            flex-shrink: 0;
+        }
+
+        .title-controls { display: flex; gap: 4px; }
+        .retro-btn {
+            width: 18px; height: 18px; background: rgba(255, 255, 255, 0.5);
+            border: 2px solid var(--win-border-inner);
+            display: flex; align-items: center; justify-content: center;
+            color: var(--win-border-inner); font-size: 11px; cursor: pointer; font-weight: bold;
+        }
+
+        .retro-bottom-bar {
+            background: var(--win-title-bg);
+            border-top: 4px solid var(--win-border-inner);
+            height: 24px; display: flex; align-items: center; padding: 0 8px;
+            justify-content: flex-start; gap: 6px;
+            flex-shrink: 0;
+        }
+        .bottom-bar-block { width: 40px; height: 12px; background: var(--btn-pink); border: 2px solid var(--win-border-inner); }
+        .bottom-bar-dot { width: 8px; height: 8px; background: var(--win-border-inner); }
+
+        .window-body { padding: 12px; display: flex; flex-direction: column; gap: 10px; flex-grow: 1; overflow: hidden; }
+
+        #win-main-feed .window-body {
+            position: relative;
+            background: transparent;
+        }
+
+        /* 日常心情记录框内衬 */
+        #mini-mood-box {
+            border: 2px solid var(--win-border-inner);
+            padding: 6px;
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        /* 社区选项卡 */
+        .trip-nav-bar { display: flex; border-bottom: 4px solid var(--win-border-inner); background: rgba(255, 255, 255, 0.2); flex-shrink: 0; }
+        .trip-tab {
+            flex: 1; padding: 8px; text-align: center; font-size: 12px; font-weight: bold; cursor: pointer;
+            border-right: 4px solid var(--win-border-inner); background: rgba(240, 240, 240, 0.2); color: #777; text-shadow: none;
+        }
+        .trip-tab:last-child { border-right: none; }
+        .trip-tab.active-tab { background: var(--btn-pink); color: var(--win-border-inner); font-weight: 900; }
+
+        .feed-container { display: flex; flex-direction: column; gap: 12px; overflow-y: auto; width: 100%; }
+        
+        /* 气泡样式 */
+        .bubble-card {
+            border: 2px solid var(--win-border-inner); border-radius: 10px; padding: 10px 12px; 
+            box-shadow: 2px 2px 0px var(--win-border-inner); position: relative; backdrop-filter: blur(5px); flex-shrink: 0;
+        }
+        .bubble-od { background: var(--bubble-od); }
+        .bubble-common { background: var(--bubble-common); }
+        .bubble-mood { background: var(--bubble-mood); }
+        .bubble-archived { opacity: 0.8; filter: grayscale(0.1); }
+        .archived-stamp {
+            display: inline-block; font-size: 13px; color: #b55252; font-weight: bold; border: 2px dashed #b55252;
+            padding: 4px 8px; text-align: center; margin-top: 8px; transform: rotate(-3deg); background: rgba(255,255,255,0.3); border-radius: 4px;
+        }
+
+        .bubble-meta {
+            font-size: 11px; color: var(--win-border-inner); border-bottom: 1px dashed var(--win-border-inner);
+            padding-bottom: 4px; margin-bottom: 6px; display: flex; flex-wrap: wrap; gap: 8px; text-shadow: none; align-items: center;
+        }
+
+        .bubble-thoughts-input {
+            width: 100%; min-height: 45px; background: transparent; border: none; outline: none;
+            font-size: 13px; line-height: 1.5; color: var(--text-color); resize: none; font-family: inherit;
+        }
+        .locked-text { font-size: 13px; line-height: 1.5; color: var(--win-border-inner); white-space: pre-wrap; min-height: 45px; }
+
+        .priority-alert-block {
+            border: 2px dashed #b55252; background: rgba(245, 230, 230, 0.5); padding: 6px;
+            color: #b55252; font-weight: bold; text-align: center; font-size: 11px; display: none; border-radius: 4px; flex-shrink: 0;
+        }
+
+        .form-group { display: flex; flex-direction: column; gap: 4px; flex-shrink: 0; }
+        .form-group label { font-size: 12px; font-weight: bold; color: var(--win-border-inner); }
+        .form-input { height: 26px; border: 2px solid var(--win-border-inner); padding: 0 8px; font-size: 13px; background: var(--input-bg); outline: none; font-family: inherit; }
+        .submit-button { height: 30px; background: var(--btn-pink); border: 2px solid var(--win-border-inner); color: var(--win-border-inner); font-weight: bold; cursor: pointer; font-family: inherit; margin-top: 4px; border-radius: 4px; box-shadow: 1px 1px 0px var(--win-border-inner); flex-shrink: 0; }
+        .submit-button:hover { background: rgba(230, 216, 255, 0.7); }
+        .status-item { display: flex; align-items: center; gap: 8px; border-bottom: 1px dotted var(--win-border-inner); padding-bottom: 3px; font-size: 12px; }
+
+                input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; }
+        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 16px; width: 16px; border-radius: 50%; background: var(--win-border-inner); cursor: pointer; margin-top: -6px; }
+        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 5px; background: linear-gradient(90deg, #b28cf6, #ffc3e7, #fff0aa); border-radius: 3px; border: 1px solid var(--win-border-inner); }
+        /* 库存管理滑条采用蓝绿色渐变 */
+        #stock-slider::-webkit-slider-runnable-track { background: linear-gradient(90deg, #ff9a9e, #a8e6cf, #88d8b0); }
+        .mini-mood-log { font-size: 11px; border-bottom: 1px dashed var(--win-border-inner); padding: 6px 0; display: flex; flex-direction: column; gap: 3px; flex-shrink: 0; background: rgba(255, 255, 255, 0.3); padding: 4px; border-radius: 4px; margin-bottom: 4px; }
+
+                /* 📚 历史记录气泡样式（从上到下依次排列） */
+        .memo-log {
+            cursor: default;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        .memo-log:hover {
+            background: rgba(255, 255, 255, 0.5);
+        }
+        .memo-log-time {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .memo-log-delete-btn {
+            font-size: 9px;
+            color: #b55252;
+            cursor: pointer;
+            border: 1px solid #b55252;
+            border-radius: 4px;
+            padding: 1px 6px;
+            background: transparent;
+            font-family: inherit;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+        .memo-log-delete-btn:hover {
+            background: rgba(181, 82, 82, 0.2);
+        }
+        .memo-empty-hint {
+            text-align: center;
+            padding: 20px;
+            color: #888;
+            font-size: 11px;
+        }
+
+        .memo-nav-bar {
+            display: flex; border-bottom: 2px solid var(--win-border-inner);
+            background: rgba(255, 255, 255, 0.22); flex-shrink: 0;
+        }
+        .memo-tab {
+            flex: 1; border: none; border-right: 2px solid var(--win-border-inner);
+            padding: 6px 4px; background: transparent; color: #777; cursor: pointer;
+            font-size: 11px; font-weight: bold; font-family: inherit;
+        }
+        .memo-tab:last-child { border-right: none; }
+        .memo-tab.active-tab { background: var(--btn-pink); color: var(--win-border-inner); }
+        .memo-panel { display: none; flex-direction: column; gap: 8px; height: 100%; min-height: 0; }
+        .memo-panel.active-panel { display: flex; }
+        .memo-actions { display: flex; gap: 8px; flex-shrink: 0; }
+        .memo-action-btn {
+            flex: 1; height: 26px; background: var(--btn-pink); border: 2px solid var(--win-border-inner);
+            color: var(--win-border-inner); font-size: 11px; font-weight: bold; cursor: pointer;
+            font-family: inherit; border-radius: 4px; box-shadow: 1px 1px 0px var(--win-border-inner);
+        }
+        .memo-history-list {
+            border: 2px solid var(--win-border-inner); background: rgba(255, 255, 255, 0.2);
+            padding: 6px; border-radius: 4px; overflow-y: auto; display: flex;
+            flex-direction: column; gap: 6px; min-height: 0;
+        }
+        .memo-log {
+            background: rgba(255, 255, 255, 0.35); border: 1px dashed var(--win-border-inner);
+            border-radius: 4px; padding: 6px; font-size: 11px; line-height: 1.5;
+        }
+                .memo-log-time { color: var(--win-border-inner); font-weight: bold; margin-bottom: 4px; }
+        .memo-log-content { white-space: pre-wrap; word-break: break-word; font-size: 11px; color: var(--text-color); margin-top: 4px; }
+
+        .music-control-btn {
+            flex: 1; height: 22px; background: transparent; border: none; outline: none; cursor: pointer;
+            background-repeat: no-repeat; background-position: center; background-size: contain;
+        }
+
+        .retro-alert-overlay {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(0, 0, 0, 0.2); display: flex; align-items: center; justify-content: center;
+            z-index: 9999; opacity: 0; pointer-events: none; transition: opacity 0.2s ease;
+        }
+        .retro-alert-overlay.show { opacity: 1; pointer-events: auto; }
+        
+        .retro-alert-box {
+            width: 340px; min-height: 200px;
+            background: rgba(255, 246, 255, 0.75);
+            border: 4px solid var(--win-border-outer);
+            box-shadow: inset 0 0 0 2px var(--win-border-inner), 0 0 0 2px var(--win-border-inner), 6px 6px 0px rgba(94, 76, 125, 0.15);
+            position: relative; padding: 0; display: flex; flex-direction: column;
+            backdrop-filter: blur(8px);
+        }
+        .retro-alert-title { 
+            height: 32px; font-size: 13px; font-weight: bold; color: var(--win-border-inner); 
+            background: var(--win-title-bg); border-bottom: 4px solid var(--win-border-inner);
+            display: flex; align-items: center; padding-left: 10px; 
+        }
+        .retro-alert-main-body { display: flex; padding: 12px; gap: 10px; flex-grow: 1; background: rgba(255, 255, 255, 0.2); align-items: center; }
+        .retro-alert-icon { width: 50px; height: 50px; flex-shrink: 0; object-fit: contain; }
+        .retro-alert-content { 
+            flex-grow: 1; font-size: 12px; color: #333; 
+            line-height: 1.6; text-align: left; display: flex; align-items: center;
+        }
+        .retro-alert-footer { 
+            height: 45px; display: flex; justify-content: center; align-items: center; 
+            border-top: 2px dotted var(--win-border-inner); background: transparent; flex-shrink: 0;
+        }
+        .retro-alert-btn { 
+            background: var(--btn-pink); border: 2px solid var(--win-border-inner); color: var(--win-border-inner); 
+            padding: 5px 20px; font-size: 12px; font-weight: bold; cursor: pointer; 
+            box-shadow: 2px 2px 0px var(--win-border-inner); border-radius: 4px;
+        }
+        .retro-alert-btn:active { transform: translate(1px, 1px); box-shadow: 1px 1px 0px var(--win-border-inner); }
+
+        /* ==========================================
+           💻 网页/电脑端布局 (屏幕宽度 > 768px)
+           ========================================== */
+        @media (min-width: 769px) {
+            body { overflow: hidden; } 
+            .retro-window { position: absolute; }
+            .retro-title-bar { cursor: move; }
+            
+            #win-main-feed { left: 2%; top: 3%; width: 40%; height: 94%; z-index: 10; }
+                        #win-memo { left: 44%; top: 3%; width: 26%; height: 64%; z-index: 14; }
+            #win-mood-logs { left: 44%; top: 69%; width: 26%; height: 28%; z-index: 13; }
+            
+            #win-status { left: 72%; top: 3%; width: 26%; z-index: 11; }
+            #win-log-input { left: 72%; top: 21%; width: 26%; z-index: 12; }
+            #win-music { left: 72%; top: 67%; width: 26%; z-index: 15; }
+            #win-mood-tracker { left: 72%; top: 82%; width: 26%; z-index: 16; }
+
+            #win-main-feed .window-body { height: calc(100% - 97px); }
+            #feed-box { height: 100%; }
+            
+            #win-mood-logs .window-body { height: calc(100% - 56px); }
+            #mini-mood-box { height: calc(100% - 10px); }
+        }
+
+        /* ==========================================
+           📱 移动手机端布局 (屏幕宽度 <= 768px)
+           ========================================== */
+        @media (max-width: 768px) {
+            body {
+                background-color: transparent !important; 
+                background-image: url('584a3fe4992831660fef2bf750a2e1cc.png') !important; 
+                background-repeat: no-repeat !important; 
+                background-size: cover !important; 
+                background-position: center center !important;
+                background-attachment: fixed !important;
+                overflow-y: auto !important; 
+                padding: 12px 10px !important;
+                display: flex !important;
+                flex-direction: column !important;
+                gap: 16px !important;
+            }
+            
+            .retro-window {
+                position: relative !important;
+                left: 0 !important; top: 0 !important;
+                width: 100% !important; height: auto !important;
+                z-index: 1 !important;
+                background-color: rgba(255, 246, 255, 0.35) !important; 
+                backdrop-filter: blur(8px) !important;
+            }
+
+            .window-body { background: transparent !important; }
+
+            #win-status { order: 1 !important; }       
+            #win-log-input { order: 2 !important; }   
+            #win-mood-tracker { order: 3 !important; }
+            #win-mood-logs { order: 4 !important; }   
+            #win-memo { order: 5 !important; }        
+            #win-main-feed { order: 6 !important; }   
+            #win-music { order: 7 !important; }       
+
+            #feed-box { max-height: 380px !important; overflow-y: auto !important; }
+            #mini-mood-box { max-height: 200px !important; overflow-y: auto !important; }
+            
+            .retro-alert-overlay {
+                position: fixed !important;
+                top: 0 !important; left: 0 !important;
+                width: 100vw !important; height: 100vh !important;
+                display: flex !important; align-items: center !important; justify-content: center !important;
+                z-index: 99999 !important;
+            }
+            .retro-alert-box { margin: auto !important; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="retro-window" id="win-status">
+        <div class="retro-title-bar drag-handle">
+            <div style="display:flex; align-items:center;"><span>USER_STATUS.SYS 🎀</span></div>
+            <div class="title-controls"><div class="retro-btn">_</div><div class="retro-btn">X</div></div>
+        </div>
+        <div class="window-body">
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <img src="d3abcacf0b7b7479e8a8670e25457021.png" style="width: 45px; height: 45px; border: 2px solid var(--win-border-inner); background: #fff;">
+                <div style="flex-grow: 1; display: flex; flex-direction: column; gap: 4px;">
+                    <div class="status-item" style="border:none; padding:0;"><span style="font-size:11px; width: 30px;">ID:</span><strong>超绝可爱糖🍬</strong></div>
+                    <div class="status-item" style="border:none; padding:0;"><span style="font-size:11px; width: 30px;">状态:</span><strong style="color: var(--win-border-inner);">✓ 社区共享模式</strong></div>
+                </div>
+            </div>
+            <div class="status-item" style="margin-top: 4px; font-size: 11px;">
+                <span>距上次记录:</span><strong id="time-elapsed">算命中...</strong>
+            </div>
+        </div>
+        <div class="retro-bottom-bar"><div class="bottom-bar-block"></div><div class="bottom-bar-dot"></div></div>
+    </div>
+
+    <div class="retro-window" id="win-log-input">
+        <div class="retro-title-bar drag-handle">
+            <div style="display:flex; align-items:center;"><span>LOG_INPUT.EXE 💊</span></div>
+            <div class="title-controls"><div class="retro-btn">_</div><div class="retro-btn">X</div></div>
+        </div>
+        <div class="window-body">
+            <div class="priority-alert-block" id="priority-alert">【！优先执行！】<br>发现还没有记录，快点生成气泡吧~</div>
+                        <div class="form-group">
+                <label>药品种类 Type</label>
+                <input type="text" id="med-type" class="form-input" placeholder="吃的是什么呢？">
+            </div>
+            <div class="form-group">
+                <label style="color:#b55252;">本次片数 💊</label>
+                <input type="number" id="med-pills" class="form-input" placeholder="吃了多少片？" min="1" value="1">
+            </div>
+                        <div class="form-group">
+                            <label>吃药时间 ⏰</label>
+                            <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
+                                <input type="number" id="med-year" class="form-input" placeholder="" min="2020" max="2099" style="width: 65px; text-align: center;">
+                                <span style="font-size: 11px; color: var(--win-border-inner); font-weight: bold;">年</span>
+                                <input type="number" id="med-month" class="form-input" placeholder="" min="1" max="12" style="width: 50px; text-align: center;">
+                                <span style="font-size: 11px; color: var(--win-border-inner); font-weight: bold;">月</span>
+                                <input type="number" id="med-day" class="form-input" placeholder="" min="1" max="31" style="width: 50px; text-align: center;">
+                                <span style="font-size: 11px; color: var(--win-border-inner); font-weight: bold;">日</span>
+                                <input type="number" id="med-hour" class="form-input" placeholder="" min="0" max="23" style="width: 50px; text-align: center;">
+                                <span style="font-size: 11px; color: var(--win-border-inner); font-weight: bold;">:</span>
+                                <input type="number" id="med-minute" class="form-input" placeholder="" min="0" max="59" style="width: 50px; text-align: center;">
+                            </div>
+                        </div>
+            <div class="form-group" style="flex-direction: row; gap: 15px; margin-top: 2px; align-items: center;">
+                <label style="font-size: 11px;">分享设置:</label>
+                <div style="display:flex; align-items:center; gap:3px;">
+                    <input type="radio" id="privacy-private" name="med-privacy" value="private" checked style="cursor:pointer;">
+                    <label for="privacy-private" style="font-size:11px; cursor:pointer;">🔒 私密</label>
+                </div>
+                <div style="display:flex; align-items:center; gap:3px;">
+                    <input type="radio" id="privacy-public" name="med-privacy" value="public" style="cursor:pointer;">
+                    <label for="privacy-public" style="font-size:11px; cursor:pointer;">🌐 公开共享</label>
+                </div>
+            </div>
+            <div class="form-group" style="flex-direction: row; align-items: center;">
+                <input type="checkbox" id="common-med-checkbox" style="margin-right: 4px; cursor: pointer;">
+                <label for="common-med-checkbox" style="cursor: pointer; font-size: 11px;">设为常用药</label>
+            </div>
+            <button class="submit-button" id="submit-log-btn">生 成 心 得 气 泡</button>
+        </div>
+        <div class="retro-bottom-bar"><div class="bottom-bar-block"></div><div class="bottom-bar-dot"></div></div>
+    </div>
+
+    <div class="retro-window" id="win-mood-tracker">
+        <div class="retro-title-bar drag-handle">
+            <div style="display:flex; align-items:center;"><span>MOOD_TRACKER.EXE 💖</span></div>
+            <div class="title-controls"><div class="retro-btn">_</div><div class="retro-btn">X</div></div>
+        </div>
+        <div class="window-body">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-size: 12px; font-weight: bold; color: var(--win-border-inner);">当下心情值：</span>
+                <span id="mood-emoji-display" style="font-size: 18px;">😐</span>
+            </div>
+            <input type="range" id="mood-slider" min="1" max="100" value="50">
+                        <div class="form-group" style="flex-direction: row; align-items: center; justify-content: space-between; margin-top: 2px;">
+                <button class="retro-btn" id="record-mood-btn" style="width: 45px; height: 22px; background: var(--win-title-bg);">记录!</button>
+            </div>
+        </div>
+        <div class="retro-bottom-bar"><div class="bottom-bar-block"></div><div class="bottom-bar-dot"></div></div>
+    </div>
+
+    <div class="retro-window" id="win-mood-logs">
+        <div class="retro-title-bar drag-handle">
+            <div style="display:flex; align-items:center;"><span>MOOD_LOGS 💭</span></div>
+            <div class="title-controls"><div class="retro-btn">_</div><div class="retro-btn">X</div></div>
+        </div>
+        <div class="window-body">
+            <div style="font-size: 12px; font-weight: bold; color: var(--win-border-inner); flex-shrink: 0; margin-bottom: 2px;">日常心路历程：</div>
+            <div class="feed-container" id="mini-mood-box">
+                <div style="text-align:center; padding-top:20px; color:#666; font-size:11px; background: rgba(255,255,255,0.2); border-radius:4px;">暂无日常情绪记录哦~</div>
+            </div>
+        </div>
+        <div class="retro-bottom-bar"><div class="bottom-bar-block"></div><div class="bottom-bar-dot"></div></div>
+    </div>
+
+    <div class="retro-window" id="win-memo">
+        <div class="retro-title-bar drag-handle">
+            <div style="display:flex; align-items:center;"><span>MEMO.TXT 📌</span></div>
+            <div class="title-controls"><div class="retro-btn">X</div></div>
+        </div>
+        <div class="memo-nav-bar">
+            <button class="memo-tab active-tab" id="memo-tab-write" onclick="switchMemoTab('write')">✏️ 写记录</button>
+            <button class="memo-tab" id="memo-tab-history" onclick="switchMemoTab('history')">📚 历史记录</button>
+        </div>
+        <div class="window-body">
+            <div class="memo-panel active-panel" id="memo-write-panel">
+                <textarea id="memo-input" class="bubble-thoughts-input" style="color: var(--win-border-inner); font-size: 12px; height: 100%; min-height: 50px;" placeholder="今天有什么记录，都写在这里哦～ ✏️"></textarea>
+                <div class="memo-actions">
+                    <button class="memo-action-btn" id="memo-save-btn">💾 保存到本地</button>
+                    <button class="memo-action-btn" id="memo-clear-btn" type="button">清空</button>
+                </div>
+            </div>
+                        <div class="memo-panel" id="memo-history-panel">
+                            <div class="memo-history-list" id="memo-history-box">
+                                <div class="memo-empty-hint">📝 还没有任何记录，快去写一条吧 ✏️</div>
+                            </div>
+                            <div class="memo-actions">
+                                <button class="memo-action-btn" id="memo-save-local-btn" type="button">💾 保存到本地</button>
+                                <button class="memo-action-btn" id="memo-clear-all-btn" type="button" style="color:#b55252; border-color:#b55252;">🗑️ 清空全部</button>
+                            </div>
+                        </div>
+        </div>
+        <div class="retro-bottom-bar"><div class="bottom-bar-block"></div><div class="bottom-bar-dot"></div></div>
+    </div>
+
+    <div class="retro-window" id="win-main-feed">
+        <div class="retro-title-bar drag-handle">
+            <div style="display:flex; align-items:center;"><span>健康状态与心路分享社区 ✧.txt</span></div>
+            <div class="title-controls"><div class="retro-btn">_</div><div class="retro-btn">□</div><div class="retro-btn">X</div></div>
+        </div>
+        <div class="trip-nav-bar">
+            <div class="trip-tab active-tab" id="tab-private" onclick="switchTab('private')">🔒 私人 Trip 记录</div>
+            <div class="trip-tab" id="tab-public" onclick="switchTab('public')">🌐 公开药物记录区</div>
+        </div>
+        <div class="window-body">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--win-border-inner); padding-bottom: 6px; flex-shrink: 0; z-index: 2;">
+                <span style="font-size: 13px; font-weight: bold; color: var(--win-border-inner);" id="feed-panel-title">飞行状态控制盘 🛸</span>
+                <button class="retro-btn" id="end-trip-btn" style="width: auto; padding: 0 10px; height: 22px; background: rgba(255, 195, 231, 0.6); font-size: 11px;">🛬 降落 / 封存归档</button>
+            </div>
+            <div class="feed-container" id="feed-box" style="z-index: 2;">
+                </div>
+        </div>
+        <div class="retro-bottom-bar"><div class="bottom-bar-block"></div><div class="bottom-bar-dot"></div></div>
+    </div>
+
+    <div class="retro-window" id="win-music">
+        <div class="retro-title-bar drag-handle">
+            <div style="display:flex; align-items:center;"><span>BGM_PLAYER.EXE 🎶</span></div>
+            <div class="title-controls"><div class="retro-btn">_</div><div class="retro-btn">X</div></div>
+        </div>
+        <div class="window-body" style="flex-direction: row; align-items: center; gap: 10px; padding: 8px 12px;">
+            <div style="width: 32px; height: 32px; background: rgba(255,255,255,0.4); border: 2px solid var(--win-border-inner); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                <div style="width: 8px; height: 8px; background: var(--win-title-bg); border-radius: 50%; border: 1px solid var(--win-border-inner);"></div>
+            </div>
+            <div style="flex-grow: 1;">
+                <div style="font-size: 11px; font-weight: bold; color: var(--win-border-inner);">INTERNET_YAMERO.mp3</div>
+                <div style="display: flex; gap: 6px; margin-top: 4px; height: 24px;">
+                    <button class="music-control-btn" style="background-image: url('a3f4510470e94e75ffde0a30c30ea781.png');"></button>
+                    <button class="music-control-btn" style="background-image: url('f74929e568cf6a5d172a3a7769ce172d.png');"></button>
+                    <button class="music-control-btn" style="background-image: url('66aa9df7cb36586d6efdb37db955b204.png');"></button>
+                </div>
+            </div>
+        </div>
+        <div class="retro-bottom-bar"><div class="bottom-bar-block"></div><div class="bottom-bar-dot"></div></div>
+    </div>
+
+        <div class="retro-alert-overlay" id="custom-alert-overlay">
+        <div class="retro-alert-box">
+            <div class="retro-alert-title" id="custom-alert-title">SYSTEM_INFO.SYS</div>
+            <div class="retro-alert-main-body">
+                <img src="7ac8726c85fd2f4cc2ba855d7657e4e1.png" class="retro-alert-icon" alt="status">
+                <div class="retro-alert-content" id="custom-alert-text">提示信息加载中...</div>
+            </div>
+            <div class="retro-alert-footer">
+                <button class="retro-alert-btn" onclick="closeRetroAlert()">确 定</button>
+            </div>
+        </div>
+    </div>
+
+        <!-- 💊 药物库存管理弹窗 -->
+        <div class="retro-alert-overlay" id="stock-alert-overlay">
+            <div class="retro-alert-box" style="width: 380px;">
+                <div class="retro-alert-title" id="stock-alert-title">STOCK_MANAGER.EXE 💊</div>
+                <div class="retro-alert-main-body" style="flex-direction: column; align-items: stretch; gap: 8px; padding: 14px;">
+                    <div style="font-size: 12px; color: var(--win-border-inner); font-weight: bold; text-align: center;" id="stock-alert-med-name">药品名</div>
+                    <!-- 库存显示 -->
+                    <div style="font-size: 11px; color: #555; text-align: center; border-bottom: 1px dashed var(--win-border-inner); padding-bottom: 6px;">
+                        当前库存：<strong id="stock-alert-current-count" style="font-size: 16px; color: var(--win-border-inner);">0</strong> 片 💊
+                    </div>
+                    <!-- 滑动条调整个数 -->
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 4px;">
+                        <span style="font-size: 11px; color: #666;">减少 ➖</span>
+                        <span style="font-size: 11px; color: #666; font-weight: bold;" id="stock-slider-value">±0</span>
+                        <span style="font-size: 11px; color: #666;">增加 ➕</span>
+                    </div>
+                    <input type="range" id="stock-slider" min="-100" max="100" value="0" style="width: 100%;">
+                    <div style="display: flex; justify-content: space-between; font-size: 10px; color: #888; margin-top: -4px;">
+                        <span>-100</span>
+                        <span>0</span>
+                        <span>+100</span>
+                    </div>
+                    <!-- 直接输入库存的输入框 -->
+                    <div style="display: flex; gap: 6px; align-items: center; margin-top: 2px;">
+                        <span style="font-size: 11px; color: var(--win-border-inner); font-weight: bold; white-space: nowrap;">直接设定：</span>
+                        <input type="number" id="stock-direct-input" class="form-input" placeholder="直接输入库存数..." min="0" value="" style="flex: 1; text-align: center; font-size: 13px;">
+                        <span style="font-size: 11px; color: #666;">片</span>
+                    </div>
+                    <div style="display: flex; gap: 8px; margin-top: 4px;">
+                        <button class="retro-alert-btn" id="stock-subtract-btn" style="flex: 1; font-size: 11px; padding: 4px 0;">💊 服用 -1</button>
+                        <button class="retro-alert-btn" id="stock-add-btn" style="flex: 1; font-size: 11px; padding: 4px 0; background: rgba(180, 220, 180, 0.6);">📦 补货 +1</button>
+                    </div>
+                </div>
+                <div class="retro-alert-footer" style="gap: 8px;">
+                    <button class="retro-alert-btn" id="stock-confirm-btn" style="flex: 1; font-size: 11px;">✓ 确认</button>
+                    <button class="retro-alert-btn" id="stock-cancel-btn" style="flex: 1; font-size: 11px; background: rgba(200,200,200,0.4);">✗ 取消创建</button>
+                </div>
+            </div>
+        </div>
+
+    <script>
+                const recordDatabase = []; 
+                const moodDatabase = [];  
+                let currentTab = 'private';
+        let medEffectsTimer = null;
+        let memoLocalData = []; // 📝 本地存储的备忘录数组
+        
+                // 💊 药品库存管理
+        let medStockDatabase = {}; // { "药名": 库存数量 }
+        let pendingStockMedData = null; // 等待库存操作的药物完整数据 { type, dosage, time, isCommon, privacy }
+
+        const feedBox = document.getElementById('feed-box');
+        const miniMoodBox = document.getElementById('mini-mood-box');
+        const priorityAlert = document.getElementById('priority-alert');
+        const timeElapsedSpan = document.getElementById('time-elapsed');
+        const moodSlider = document.getElementById('mood-slider');
+        const moodEmojiDisplay = document.getElementById('mood-emoji-display');
+        const memoInput = document.getElementById('memo-input');
+        const memoHistoryBox = document.getElementById('memo-history-box');
+
+        // ======== 📦 localStorage 本地备忘录持久化 ========
+        function loadMemoFromLocal() {
+            try {
+                const saved = localStorage.getItem('memoLocalData');
+                if (saved) {
+                    memoLocalData = JSON.parse(saved);
+                } else {
+                    memoLocalData = [];
+                }
+            } catch (e) {
+                memoLocalData = [];
+            }
+        }
+        function saveMemoToLocal() {
+            localStorage.setItem('memoLocalData', JSON.stringify(memoLocalData));
+        }
+        loadMemoFromLocal(); // 启动时加载
+
+        // ======== 💊 localStorage 药品库存持久化 ========
+        function loadMedStockFromLocal() {
+            try {
+                const saved = localStorage.getItem('medStockDatabase');
+                if (saved) {
+                    medStockDatabase = JSON.parse(saved);
+                } else {
+                    medStockDatabase = {};
+                }
+            } catch (e) {
+                medStockDatabase = {};
+            }
+        }
+        function saveMedStockToLocal() {
+            localStorage.setItem('medStockDatabase', JSON.stringify(medStockDatabase));
+        }
+        loadMedStockFromLocal(); // 启动时加载
+
+        function showRetroAlert(title, text) {
+            document.getElementById('custom-alert-title').textContent = title;
+            document.getElementById('custom-alert-text').innerHTML = text;
+            document.getElementById('custom-alert-overlay').classList.add('show');
+        }
+
+        function closeRetroAlert() { document.getElementById('custom-alert-overlay').classList.remove('show'); }
+
+                                // ======== 💊 库存管理弹窗函数 ========
+        function openStockAlert(medName, onConfirm) {
+            pendingStockMedData = { medName: medName, onConfirm: onConfirm };
+            
+            document.getElementById('stock-alert-title').textContent = `STOCK_MANAGER.EXE 💊`;
+            document.getElementById('stock-alert-med-name').textContent = `「${medName}」库存管理`;
+            
+            const currentStock = medStockDatabase[medName] || 0;
+            document.getElementById('stock-alert-current-count').textContent = currentStock;
+            
+            // 重置滑条
+            const slider = document.getElementById('stock-slider');
+            slider.value = 0;
+            document.getElementById('stock-slider-value').textContent = '±0';
+            
+            // 直接输入框置为当前库存
+            document.getElementById('stock-direct-input').value = currentStock;
+            
+            document.getElementById('stock-alert-overlay').classList.add('show');
+        }
+
+        function closeStockAlert() {
+            document.getElementById('stock-alert-overlay').classList.remove('show');
+            pendingStockMedData = null;
+        }
+
+        // 直接输入框与滑条联动
+        document.getElementById('stock-direct-input').addEventListener('input', function() {
+            if (!pendingStockMedData) return;
+            const currentStock = medStockDatabase[pendingStockMedData.medName] || 0;
+            const targetVal = parseInt(this.value);
+            if (!isNaN(targetVal) && targetVal >= 0) {
+                // 同步滑条显示差值
+                const diff = targetVal - currentStock;
+                const clamped = Math.max(-100, Math.min(100, diff));
+                document.getElementById('stock-slider').value = clamped;
+                document.getElementById('stock-slider-value').textContent = (clamped >= 0 ? '+' : '') + clamped;
+            }
+        });
+
+        // 确认按钮
+        document.getElementById('stock-confirm-btn').addEventListener('click', function() {
+            if (!pendingStockMedData) return;
+            const { medName, onConfirm } = pendingStockMedData;
+            const currentStock = medStockDatabase[medName] || 0;
+            
+            // 优先使用直接输入框的值
+            const directVal = parseInt(document.getElementById('stock-direct-input').value);
+            let newStock;
+            if (!isNaN(directVal) && directVal >= 0) {
+                newStock = directVal;
+            } else {
+                // 无直接输入值，用滑条调整
+                const adjustValue = parseInt(document.getElementById('stock-slider').value);
+                newStock = Math.max(0, currentStock + adjustValue);
+            }
+            
+            medStockDatabase[medName] = newStock;
+            saveMedStockToLocal();
+            if (onConfirm) onConfirm(newStock);
+            closeStockAlert();
+        });
+
+        // 取消按钮
+        document.getElementById('stock-cancel-btn').addEventListener('click', function() {
+            closeStockAlert();
+            showRetroAlert('INFO 📌', '已取消创建药物气泡。');
+        });
+
+        // 滑条数值变化时更新显示 + 同步直接输入框
+        document.getElementById('stock-slider').addEventListener('input', function() {
+            if (!pendingStockMedData) return;
+            const val = parseInt(this.value);
+            const prefix = val >= 0 ? '+' : '';
+            document.getElementById('stock-slider-value').textContent = prefix + val;
+            
+            // 同步到直接输入框
+            const currentStock = medStockDatabase[pendingStockMedData.medName] || 0;
+            const newStock = Math.max(0, currentStock + val);
+            document.getElementById('stock-direct-input').value = newStock;
+        });
+
+        // 服用-1按钮
+        document.getElementById('stock-subtract-btn').addEventListener('click', function() {
+            if (!pendingStockMedData) return;
+            const medName = pendingStockMedData.medName;
+            const currentStock = medStockDatabase[medName] || 0;
+            if (currentStock > 0) {
+                medStockDatabase[medName] = currentStock - 1;
+                saveMedStockToLocal();
+                document.getElementById('stock-alert-current-count').textContent = medStockDatabase[medName];
+                document.getElementById('stock-slider').value = 0;
+                document.getElementById('stock-slider-value').textContent = '±0';
+                document.getElementById('stock-direct-input').value = medStockDatabase[medName];
+            }
+        });
+
+        // 补货+1按钮
+        document.getElementById('stock-add-btn').addEventListener('click', function() {
+            if (!pendingStockMedData) return;
+            const medName = pendingStockMedData.medName;
+            const currentStock = medStockDatabase[medName] || 0;
+            medStockDatabase[medName] = currentStock + 1;
+            saveMedStockToLocal();
+            document.getElementById('stock-alert-current-count').textContent = medStockDatabase[medName];
+            document.getElementById('stock-slider').value = 0;
+            document.getElementById('stock-slider-value').textContent = '±0';
+            document.getElementById('stock-direct-input').value = medStockDatabase[medName];
+        });
+
+        // ======== 📚 备忘录 Tab 切换 ========
+        window.switchMemoTab = function(tabName) {
+            document.getElementById('memo-tab-write').classList.toggle('active-tab', tabName === 'write');
+            document.getElementById('memo-tab-history').classList.toggle('active-tab', tabName === 'history');
+            document.getElementById('memo-write-panel').classList.toggle('active-panel', tabName === 'write');
+            document.getElementById('memo-history-panel').classList.toggle('active-panel', tabName === 'history');
+            if (tabName === 'history') {
+                renderMemoHistory();
+            }
+        };
+
+        function formatDateTime(dateStr) {
+            const d = new Date(dateStr);
+            return d.toLocaleString('zh-CN', { 
+                month: '2-digit', day: '2-digit',
+                hour: '2-digit', minute: '2-digit'
+            });
+        }
+
+        // ======== 📋 渲染历史记录列表（从上到下，最新的在最上面） ========
+        function renderMemoHistory() {
+            memoHistoryBox.innerHTML = '';
+
+            if (memoLocalData.length === 0) {
+                memoHistoryBox.innerHTML = '<div class="memo-empty-hint">📝 还没有任何记录，快去写一条吧 ✏️</div>';
+                return;
+            }
+
+            // 按时间从新到旧排序
+            const sorted = [...memoLocalData].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+            sorted.forEach((memo, index) => {
+                const log = document.createElement('div');
+                log.className = 'memo-log';
+                
+                const timeDiv = document.createElement('div');
+                timeDiv.className = 'memo-log-time';
+                
+                const timeText = document.createElement('span');
+                timeText.textContent = formatDateTime(memo.createdAt);
+                
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = 'memo-log-delete-btn';
+                deleteBtn.textContent = '✕ 删除';
+                deleteBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    // 找到在原始数组中的索引
+                    const realIndex = memoLocalData.findIndex(m => 
+                        m.createdAt === memo.createdAt && m.content === memo.content
+                    );
+                    if (realIndex !== -1) {
+                        memoLocalData.splice(realIndex, 1);
+                        saveMemoToLocal();
+                        renderMemoHistory();
+                        showRetroAlert('DELETED 🗑️', '已删除该条记录。');
+                    }
+                };
+                
+                timeDiv.appendChild(timeText);
+                timeDiv.appendChild(deleteBtn);
+                
+                const contentDiv = document.createElement('div');
+                contentDiv.className = 'memo-log-content';
+                contentDiv.textContent = memo.content;
+                
+                log.appendChild(timeDiv);
+                log.appendChild(contentDiv);
+                
+                memoHistoryBox.appendChild(log);
+            });
+        }
+
+        // ======== 💾 保存到本地（不依赖后端） ========
+        function saveMemoToLocalStorage() {
+            const content = memoInput.value.trim();
+            if (!content) {
+                showRetroAlert('MEMO 📌', '先写一点内容再保存哦。');
+                return;
+            }
+            memoLocalData.unshift({
+                id: Date.now(),
+                content: content,
+                createdAt: new Date().toISOString()
+            });
+            saveMemoToLocal();
+            memoInput.value = '';
+            showRetroAlert('SUCCESS 💾', '随手记录已保存到本地！可以在历史记录里查看。');
+            switchMemoTab('history');
+        }
+
+        // ======== 🗑️ 清空全部本地记录 ========
+        function clearAllLocalMemos() {
+            if (memoLocalData.length === 0) {
+                showRetroAlert('INFO 🗑️', '本地没有任何记录可清空。');
+                return;
+            }
+            if (confirm('确定要清空所有本地记录吗？此操作不可恢复！')) {
+                memoLocalData = [];
+                saveMemoToLocal();
+                renderMemoHistory();
+                showRetroAlert('SUCCESS 🗑️', '已清空所有本地记录。');
+            }
+        }
+
+        // ======== 绑定备忘录按钮事件 ========
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('memo-save-btn').addEventListener('click', saveMemoToLocalStorage);
+            document.getElementById('memo-clear-btn').addEventListener('click', () => { memoInput.value = ''; });
+            document.getElementById('memo-save-local-btn').addEventListener('click', saveMemoToLocalStorage);
+            document.getElementById('memo-clear-all-btn').addEventListener('click', clearAllLocalMemos);
+        });
+
+        function switchTab(tabName) {
+            currentTab = tabName;
+            document.getElementById('tab-private').classList.remove('active-tab');
+            document.getElementById('tab-public').classList.remove('active-tab');
+            const endTripBtn = document.getElementById('end-trip-btn');
+            const panelTitle = document.getElementById('feed-panel-title');
+
+            if (tabName === 'private') {
+                document.getElementById('tab-private').classList.add('active-tab');
+                panelTitle.textContent = "飞行状态控制盘 🛸";
+                endTripBtn.style.display = "block";
+            } else {
+                document.getElementById('tab-public').classList.add('active-tab');
+                panelTitle.textContent = "全员健康状态共享流 🌐";
+                endTripBtn.style.display = "none";
+            }
+            renderFeed();
+        }
+
+                // 🟢 核心控制函数：整合药物和心情状态，统一管理动画挂载
+                let isMedShakingActive = false; // 记录药物引起的震颤状态是否处于两分钟有效期内
+
+                function refreshVisualState() {
+                    const moodVal = parseInt(moodSlider.value);
+            
+                    // 只要心情滑块移动到 < 30 的位置，或者处于药物发作的2分钟内，就开启视觉特效
+                    if (moodVal < 30 || isMedShakingActive) {
+                        document.body.classList.add('psychedelic-mode');
+                        document.querySelectorAll('.retro-window').forEach(win => win.classList.add('all-box-shake'));
+                    } else {
+                        document.body.classList.remove('psychedelic-mode');
+                        document.querySelectorAll('.retro-window').forEach(win => win.classList.remove('all-box-shake'));
+                    }
+                }
+
+                // 💡 心情监测：移动到位置立刻触发震颤 (不需要点击任何按键)
+                moodSlider.addEventListener('input', (e) => {
+                    const val = e.target.value;
+                    if(val < 20) moodEmojiDisplay.textContent = '😭';
+                    else if(val < 40) moodEmojiDisplay.textContent = '😔';
+                    else if(val < 60) moodEmojiDisplay.textContent = '😐';
+                    else if(val < 80) moodEmojiDisplay.textContent = '🥰';
+                    else moodEmojiDisplay.textContent = '🤩';
+            
+                    refreshVisualState(); // 移动时即刻触发
+                });
+
+                                // ======== ⏰ 时间输入：年月日时分自行填写 ========
+        function getSelectedDateTime() {
+            const year = document.getElementById('med-year').value;
+            const month = document.getElementById('med-month').value.padStart(2, '0');
+            const day = document.getElementById('med-day').value.padStart(2, '0');
+            const hour = document.getElementById('med-hour').value.padStart(2, '0');
+            const minute = document.getElementById('med-minute').value.padStart(2, '0');
+            if (!year || !month || !day || !hour || !minute) {
+                return '';
+            }
+            return year + '-' + month + '-' + day + 'T' + hour + ':' + minute;
+        }
+
+        function updateDashboard() {
+            const privateRecords = recordDatabase.filter(r => r.user === undefined || r.user === "超绝可爱糖🍬");
+            if (privateRecords.length === 0) {
+                priorityAlert.style.display = 'block'; 
+                timeElapsedSpan.textContent = '暂无记录';
+            } else {
+                priorityAlert.style.display = 'none'; 
+                const lastTime = new Date(privateRecords[0].startTime);
+                const diffMs = new Date() - lastTime;
+                if (diffMs < 0) { timeElapsedSpan.textContent = '就在刚刚！✨'; } 
+                else {
+                    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+                    const diffHours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                    timeElapsedSpan.textContent = `${diffDays}天 ${diffHours}小时前`;
+                }
+            }
+            renderFeed();
+            renderMiniMoods();
+        }
+
+        function renderFeed() {
+            feedBox.innerHTML = '';
+            let filteredData = (currentTab === 'private') 
+                ? recordDatabase.filter(item => item.user === undefined || item.user === "超绝可爱糖🍬")
+                : recordDatabase.filter(item => item.privacy === "public");
+
+            if (filteredData.length === 0) {
+                feedBox.innerHTML = `<div style="text-align:center; padding-top:40px; color:#5b657e; font-size:13px;">空空如也哦 🎈</div>`;
+                return;
+            }
+
+            filteredData.forEach(item => {
+                const bubble = document.createElement('div');
+                let extraClass = item.archived ? 'bubble-archived' : '';
+                const userTag = item.user || "超绝可爱糖🍬";
+                const privacyTag = item.privacy === 'public' ? '🌐 公开' : '🔒 私密';
+                
+                let contentHTML = (item.archived || userTag !== "超绝可爱糖🍬")
+                    ? `<div class="locked-text">${item.thoughts || '这个小伙伴没有写下详细心得描述~'}</div>${item.archived ? `<div class="archived-stamp">已封存 🛬 历时 ${item.duration || '0'} 小时</div>` : ''}`
+                    : `<textarea class="bubble-thoughts-input" placeholder="为这次重要的记录写下详细的描述吧..." oninput="updateThoughts(${item.id}, this.value)">${item.thoughts}</textarea>`;
+
+                                if (item.isMoodOnly) {
+                    bubble.className = `bubble-card bubble-mood ${extraClass}`;
+                    bubble.innerHTML = `<div class="bubble-meta"><span>👤 ${userTag}</span><span>🕒 ${item.startTime.replace('T', ' ')}</span><span>心情: ${item.moodEmoji} (${item.moodVal}%)</span></div>${contentHTML}`;
+                } else {
+                    bubble.className = `bubble-card ${item.isCommon ? 'bubble-common' : 'bubble-od'} ${extraClass}`;
+                    bubble.innerHTML = `<div class="bubble-meta"><span>👤 <strong>${userTag}</strong></span><span>💊 <strong>${item.type}</strong></span><span>📦 <strong>${item.pills || 0} 片</strong></span><span>📦 库存 <strong>${item.remain} 片</strong></span><span style="color:var(--win-border-inner);">【${privacyTag}】</span></div>${contentHTML}`;
+                }
+                feedBox.appendChild(bubble);
+            });
+        }
+
+        function renderMiniMoods() {
+            miniMoodBox.innerHTML = '';
+            if (moodDatabase.length === 0) {
+                miniMoodBox.innerHTML = '<div style="text-align:center; padding-top:10px; color:#555; font-size:11px; background:rgba(255,255,255,0.2); padding:4px; border-radius:4px;">暂无日常状态记录</div>';
+                return;
+            }
+            moodDatabase.forEach(m => {
+                const log = document.createElement('div');
+                log.className = 'mini-mood-log';
+                log.innerHTML = `<div style="color: var(--win-border-inner); font-weight: bold;">${m.time}</div><div>状态：${m.emoji} (${m.val}%)</div>`;
+                miniMoodBox.appendChild(log);
+            });
+        }
+
+        window.updateThoughts = function(id, newText) {
+            const record = recordDatabase.find(r => r.id === id);
+            if(record && !record.archived) record.thoughts = newText;
+        };
+
+        document.getElementById('end-trip-btn').addEventListener('click', () => {
+            let archivedCount = 0;
+            recordDatabase.forEach(item => {
+                if ((item.user === undefined || item.user === "超绝可爱糖🍬") && !item.archived) {
+                    item.archived = true;
+                    item.duration = Math.max(0, (Date.now() - new Date(item.startTime).getTime()) / (1000 * 60 * 60)).toFixed(1);
+                    archivedCount++;
+                }
+            });
+            if (archivedCount > 0) { showRetroAlert('SUCCESS 🛬', `成功归档！本次封存了私人框里的 ${archivedCount} 条数据喵~`); updateDashboard(); } 
+            else { showRetroAlert('INFO 📌', '当前个人框里没有进行中的记录哦~'); }
+        });
+
+                                                                // 💡 药物生成逻辑：点击生成心得气泡发送后，符合条件才开始计时震颤两分钟
+                // 库存管理：新药自动库存为0并弹出调整弹窗
+                document.getElementById('submit-log-btn').addEventListener('click', function() {
+                    const typeInput = document.getElementById('med-type').value.trim();
+                    const pillsInput = parseInt(document.getElementById('med-pills').value);
+                    const timeInput = getSelectedDateTime(); // 改用自定义日历的值
+                    const isCommon = document.getElementById('common-med-checkbox').checked;
+                    const privacyInput = document.querySelector('input[name="med-privacy"]:checked').value;
+
+                    if (!typeInput || isNaN(pillsInput) || pillsInput < 1 || !timeInput) {
+                        showRetroAlert('WARNING ⚠️', '要把种类、片数和时间填写完整才可以生成气泡哦！');
+                        return;
+                    }
+
+                    // ======== 💊 库存管理逻辑 ========
+                    const existingStock = medStockDatabase[typeInput];
+            
+                    if (existingStock === undefined) {
+                        // 新药：自动把库存设为0，弹出弹窗让用户设定库存
+                        medStockDatabase[typeInput] = 0;
+                        saveMedStockToLocal();
+                    }
+                    
+                    // 先扣减本次服用片数
+                    const afterTake = Math.max(0, medStockDatabase[typeInput] - pillsInput);
+                    medStockDatabase[typeInput] = afterTake;
+                    saveMedStockToLocal();
+                    
+                    // 弹出库存调整弹窗
+                    openStockAlert(typeInput, function(adjustedStock) {
+                        // 用户确认调整后，用调整后的库存
+                        medStockDatabase[typeInput] = adjustedStock;
+                        saveMedStockToLocal();
+                        createMedBubble(typeInput, timeInput, pillsInput, adjustedStock, isCommon, privacyInput);
+                    });
+                });
+
+                // 抽取创建药物气泡的独立函数
+                function createMedBubble(typeInput, timeInput, pillsNum, stockNum, isCommon, privacyInput) {
+                                        // 1. 先把数据成功推入队列并发送大框
+                    recordDatabase.unshift({
+                        id: Date.now(), isMoodOnly: false, type: typeInput, startTime: timeInput,
+                        remain: stockNum, pills: pillsNum, isCommon: isCommon, privacy: privacyInput, thoughts: "", archived: false, user: "超绝可爱糖🍬"
+                    });
+
+                    // 2. 🟢 过量特效：一次性服用 >= 10 片触发两分钟震颤
+                    if (pillsNum >= 10) {
+                        if (medEffectsTimer) clearTimeout(medEffectsTimer);
+                        isMedShakingActive = true;
+                        refreshVisualState();
+                        medEffectsTimer = setTimeout(() => {
+                            isMedShakingActive = false;
+                            refreshVisualState();
+                        }, 120000);
+                    }
+
+                    // 3. 清空输入框表单
+                    document.getElementById('med-type').value = '';
+                    document.getElementById('med-pills').value = 1;
+            
+                    updateDashboard();
+                    showRetroAlert('SUCCESS 💊', privacyInput === 'public' ? '记录生成成功！已同步发至【公开药物记录区】共享流。' : '记录成功！已安全放入您的私密专属区。');
+                }
+
+                document.getElementById('record-mood-btn').addEventListener('click', () => {
+            const now = new Date();
+            const timeStr = now.toISOString().slice(0,16).replace('T', ' ');
+
+            moodDatabase.unshift({ time: timeStr, emoji: moodEmojiDisplay.textContent, val: moodSlider.value });
+
+            updateDashboard(); showRetroAlert('SYSTEM 💖', '当前状态数据保存成功！');
+        });
+
+        let zIndexCounter = 20;
+        function makeDraggable(winElement) {
+            const handle = winElement.querySelector('.drag-handle');
+            if(!handle) return;
+            handle.addEventListener('mousedown', (e) => {
+                if (window.innerWidth <= 768 || e.target.className === 'music-control-btn' || e.target.className === 'retro-btn') return; 
+                winElement.style.zIndex = ++zIndexCounter;
+                const rect = winElement.getBoundingClientRect();
+                winElement.style.left = rect.left + 'px'; winElement.style.top = rect.top + 'px';
+                let startX = e.clientX - rect.left, startY = e.clientY - rect.top;
+                const dragMove = (ev) => { winElement.style.left = (ev.clientX - startX) + 'px'; winElement.style.top = (ev.clientY - startY) + 'px'; };
+                const dragStop = () => { document.removeEventListener('mousemove', dragMove); document.removeEventListener('mouseup', dragStop); };
+                document.addEventListener('mousemove', dragMove); document.addEventListener('mouseup', dragStop);
+            });
+        }
+                document.querySelectorAll('.retro-window').forEach(makeDraggable);
+        updateDashboard();
+    </script>
+</body>
+</html>
