@@ -302,26 +302,50 @@
            💻 网页/电脑端布局 (屏幕宽度 > 768px)
            ========================================== */
         @media (min-width: 769px) {
-            body { overflow: hidden; } 
-            .retro-window { position: absolute; }
-            .retro-title-bar { cursor: move; }
-            
-            #win-main-feed { left: 2%; top: 3%; width: 40%; height: 94%; z-index: 10; }
-                        #win-memo { left: 44%; top: 3%; width: 26%; height: 64%; z-index: 14; }
-            #win-mood-logs { left: 44%; top: 69%; width: 26%; height: 28%; z-index: 13; }
-            
-            #win-status { left: 72%; top: 3%; width: 26%; z-index: 11; }
-            #win-log-input { left: 72%; top: 21%; width: 26%; z-index: 12; }
-            #win-music { left: 72%; top: 67%; width: 26%; z-index: 15; }
-            #win-mood-tracker { left: 72%; top: 82%; width: 26%; z-index: 16; }
-            #win-od-stats { left: 2%; top: 12%; width: 30%; z-index: 18; }
-            #win-plans { left: 44%; top: 28%; width: 28%; z-index: 19; }
+            /* 电脑端也采用下滑式流式布局（跟手机端一致，整齐排列，不拖拽） */
+            body {
+                overflow-y: auto !important;
+                display: flex;
+                flex-direction: column;
+                gap: 16px;
+                padding: 12px 10px;
+                align-items: center;
+            }
+            .retro-window {
+                position: relative;
+                left: auto;
+                top: auto;
+                width: 100%;
+                max-width: 900px;
+                height: auto;
+                flex-shrink: 0;
+            }
+            .retro-title-bar { cursor: default; }
 
-            #win-main-feed .window-body { height: calc(100% - 97px); }
-            #feed-box { height: 100%; }
-            
-            #win-mood-logs .window-body { height: calc(100% - 56px); }
-            #mini-mood-box { height: calc(100% - 10px); }
+            /* 窗口从上到下依次排列 */
+            #win-status { order: 1; }
+            #win-log-input { order: 2; }
+            #win-mood-tracker { order: 3; }
+            #win-mood-logs { order: 4; }
+            #win-memo { order: 5; }
+            #win-main-feed { order: 6; }
+            #win-music { order: 7; }
+            #win-od-stats { order: 8; }
+            #win-plans { order: 9; }
+
+            /* 内部滚动区域：给 memo 框与 trip(主记录)框设定更高的固定高度，
+               使记录很多时在框内部上下滑动，而不把整个页面无限加长；宽度保持不变 */
+            #win-memo { max-height: 78vh; }
+            #win-memo .window-body { min-height: 0; }
+            #win-memo .memo-panel { min-height: 0; }
+            #memo-history-box { max-height: 56vh; }
+
+            #win-main-feed { max-height: 82vh; }
+            #win-main-feed .window-body { max-height: none; min-height: 0; }
+            #feed-box { max-height: 74vh; overflow-y: auto; }
+
+            #win-mood-logs .window-body { max-height: 50vh; }
+            #mini-mood-box { max-height: 30vh; overflow-y: auto; }
         }
 
         /* ==========================================
@@ -1568,22 +1592,10 @@
             });
         });
 
-        let zIndexCounter = 20;
-        function makeDraggable(winElement) {
-            const handle = winElement.querySelector('.drag-handle');
-            if(!handle) return;
-            handle.addEventListener('mousedown', (e) => {
-                if (window.innerWidth <= 768 || e.target.className === 'music-control-btn' || e.target.className === 'retro-btn') return; 
-                winElement.style.zIndex = ++zIndexCounter;
-                const rect = winElement.getBoundingClientRect();
-                winElement.style.left = rect.left + 'px'; winElement.style.top = rect.top + 'px';
-                let startX = e.clientX - rect.left, startY = e.clientY - rect.top;
-                const dragMove = (ev) => { winElement.style.left = (ev.clientX - startX) + 'px'; winElement.style.top = (ev.clientY - startY) + 'px'; };
-                const dragStop = () => { document.removeEventListener('mousemove', dragMove); document.removeEventListener('mouseup', dragStop); };
-                document.addEventListener('mousemove', dragMove); document.addEventListener('mouseup', dragStop);
-            });
-        }
-                document.querySelectorAll('.retro-window').forEach(makeDraggable);
+        // 已改为下滑式流式布局，取消窗口拖拽功能
+        // let zIndexCounter = 20;
+        // function makeDraggable(winElement) { ... }
+        // document.querySelectorAll('.retro-window').forEach(makeDraggable);
         updateDashboard();
     </script>
 </body>
