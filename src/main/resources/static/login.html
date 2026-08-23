@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>登录 · 健康状态与心路分享社区 ✧</title>
+    <style>
+        :root {
+            --win-border-outer: #705b93;
+            --win-border-inner: #5e4c7d;
+            --win-title-bg: rgba(230, 216, 255, 0.7);
+            --window-bg: rgba(255, 246, 255, 0.75);
+            --input-bg: rgba(255, 255, 255, 0.5);
+            --btn-pink: rgba(220, 174, 230, 0.7);
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Zpix','SimSun','NSimSun','DotGothic16',monospace; }
+        body {
+            min-height: 100vh; display: flex; align-items: center; justify-content: center;
+            background-image: url('bg.jpg'); background-repeat: no-repeat; background-size: cover; background-position: center;
+            background-color: #f7a8f4; padding: 20px;
+        }
+        .login-window {
+            width: 380px; max-width: 100%;
+            background-color: var(--window-bg);
+            border: 4px solid var(--win-border-outer);
+            box-shadow: inset 0 0 0 2px var(--win-border-inner), 0 0 0 2px var(--win-border-inner), 6px 6px 0px rgba(94,76,125,0.15);
+            backdrop-filter: blur(8px);
+            overflow: hidden;
+        }
+        .title-bar {
+            background: var(--win-title-bg); border-bottom: 4px solid var(--win-border-inner);
+            padding: 10px 12px; font-size: 13px; font-weight: bold; color: var(--win-border-inner);
+        }
+        .tabs { display: flex; border-bottom: 3px solid var(--win-border-inner); background: rgba(255,255,255,0.3); }
+        .tab {
+            flex: 1; padding: 10px; text-align: center; font-size: 13px; font-weight: bold; cursor: pointer;
+            color: #777; background: transparent; border: none; border-right: 3px solid var(--win-border-inner);
+        }
+        .tab:last-child { border-right: none; }
+        .tab.active { background: var(--btn-pink); color: var(--win-border-inner); }
+        .form-body { padding: 20px; display: flex; flex-direction: column; gap: 14px; }
+        .form-group { display: flex; flex-direction: column; gap: 5px; }
+        .form-group label { font-size: 12px; font-weight: bold; color: var(--win-border-inner); }
+        .form-input {
+            height: 34px; border: 2px solid var(--win-border-inner); padding: 0 10px; font-size: 13px;
+            background: var(--input-bg); outline: none;
+        }
+        .login-btn {
+            height: 38px; background: var(--btn-pink); border: 2px solid var(--win-border-inner);
+            color: var(--win-border-inner); font-weight: bold; font-size: 14px; cursor: pointer;
+            box-shadow: 2px 2px 0px var(--win-border-inner); margin-top: 6px;
+        }
+        .login-btn:active { transform: translate(1px,1px); box-shadow: 1px 1px 0px var(--win-border-inner); }
+        .msg { font-size: 12px; text-align: center; min-height: 18px; }
+        .msg.ok { color: #3a9d5d; }
+        .msg.err { color: #b55252; }
+        .hint { font-size: 11px; color: #777; text-align: center; }
+        .bottom-bar { background: var(--win-title-bg); border-top: 4px solid var(--win-border-inner); height: 20px; }
+    </style>
+</head>
+<body>
+
+    <div class="login-window">
+        <div class="title-bar">社区登录 · MEMBER_ACCESS.SYS ✨</div>
+
+        <div class="tabs">
+            <button class="tab active" id="tab-login" onclick="switchTab('login')">🔑 登 录</button>
+            <button class="tab" id="tab-register" onclick="switchTab('register')">✏️ 注 册</button>
+        </div>
+
+        <!-- 登录面板 -->
+        <div class="form-body" id="panel-login">
+            <div class="form-group">
+                <label>用户名 Username</label>
+                <input type="text" id="login-username" class="form-input" autocomplete="username">
+            </div>
+            <div class="form-group">
+                <label>密码 Password</label>
+                <input type="password" id="login-password" class="form-input" autocomplete="current-password">
+            </div>
+            <button class="login-btn" id="login-submit">进 入 社 区 🎀</button>
+            <div class="msg" id="login-msg"></div>
+        </div>
+
+        <!-- 注册面板 -->
+        <div class="form-body" id="panel-register" style="display:none;">
+            <div class="form-group">
+                <label>用户名 Username</label>
+                <input type="text" id="reg-username" class="form-input" autocomplete="off">
+            </div>
+            <div class="form-group">
+                <label>昵称 Nickname（公开区显示的名字）</label>
+                <input type="text" id="reg-nickname" class="form-input" autocomplete="off">
+            </div>
+            <div class="form-group">
+                <label>密码 Password</label>
+                <input type="password" id="reg-password" class="form-input" autocomplete="new-password">
+            </div>
+            <button class="login-btn" id="reg-submit">创建账号 ✨</button>
+            <div class="msg" id="reg-msg"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8080/api';
+
+        function switchTab(name) {
+            document.getElementById('tab-login').classList.toggle('active', name === 'login');
+            document.getElementById('tab-register').classList.toggle('active', name === 'register');
+            document.getElementById('panel-login').style.display = name === 'login' ? 'flex' : 'none';
+            document.getElementById('panel-register').style.display = name === 'register' ? 'flex' : 'none';
+            document.getElementById('login-msg').textContent = '';
+            document.getElementById('reg-msg').textContent = '';
+        }
+
+        function post(path, body) {
+            return fetch(API_BASE + path, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            });
+        }
+
+        // 登录
+        document.getElementById('login-submit').addEventListener('click', async () => {
+            const username = document.getElementById('login-username').value.trim();
+            const password = document.getElementById('login-password').value;
+            const msg = document.getElementById('login-msg');
+            if (!username || !password) { msg.textContent = '请填写用户名和密码。'; msg.className='msg err'; return; }
+            msg.textContent = '登录中...'; msg.className = 'msg ok';
+            const res = await post('/users/login', { username, password });
+            const data = await res.json();
+            if (res.ok) {
+                saveSession(data);
+                window.location.href = 'index.html'; // 进入主社区
+            } else {
+                msg.textContent = data.error || '登录失败。'; msg.className = 'msg err';
+            }
+        });
+
+        // 注册
+        document.getElementById('reg-submit').addEventListener('click', async () => {
+            const username = document.getElementById('reg-username').value.trim();
+            const nickname = document.getElementById('reg-nickname').value.trim();
+            const password = document.getElementById('reg-password').value;
+            const msg = document.getElementById('reg-msg');
+            if (!username || !nickname || !password) { msg.textContent = '请填写全部信息。'; msg.className='msg err'; return; }
+            msg.textContent = '创建中...'; msg.className = 'msg ok';
+            const res = await post('/users/register', { username, password, nickname });
+            const data = await res.json();
+            if (res.ok) {
+                saveSession(data);
+                msg.textContent = '注册成功！正在进入社区...'; msg.className = 'msg ok';
+                setTimeout(() => window.location.href = 'index.html', 600);
+            } else {
+                msg.textContent = data.error || '注册失败。'; msg.className = 'msg err';
+            }
+        });
+
+        // 把登录用户信息存入 localStorage，供主页面使用
+        function saveSession(user) {
+            localStorage.setItem('currentUser', JSON.stringify(user));
+        }
+
+        // 回车提交
+        function bindEnter(id, clickId) {
+            const el = document.getElementById(id);
+            el.addEventListener('keydown', (e) => { if (e.key === 'Enter') document.getElementById(clickId).click(); });
+        }
+        bindEnter('login-username', 'login-submit');
+        bindEnter('login-password', 'login-submit');
+        bindEnter('reg-username', 'reg-submit');
+        bindEnter('reg-nickname', 'reg-submit');
+        bindEnter('reg-password', 'reg-submit');
+    </script>
+</body>
+</html>

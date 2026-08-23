@@ -43,6 +43,10 @@ public class MedicationRecord {
     @Column(name = "is_common", nullable = false)
     private Boolean isCommon = false;
 
+    /** 本次是否为正常用药；false 则视为过量用药(OD) */
+    @Column(name = "is_normal_dose", nullable = false)
+    private Boolean isNormalDose = true;
+
     /** 公开 or 私密 */
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
@@ -95,6 +99,8 @@ public class MedicationRecord {
     public void setTakenAt(LocalDateTime takenAt) { this.takenAt = takenAt; }
     public Boolean getIsCommon() { return isCommon; }
     public void setIsCommon(Boolean isCommon) { this.isCommon = isCommon; }
+    public Boolean getIsNormalDose() { return isNormalDose; }
+    public void setIsNormalDose(Boolean isNormalDose) { this.isNormalDose = isNormalDose != null ? isNormalDose : true; }
     public Privacy getPrivacy() { return privacy; }
     public void setPrivacy(Privacy privacy) { this.privacy = privacy; }
     public String getThoughts() { return thoughts; }
@@ -112,3 +118,4 @@ public class MedicationRecord {
         PUBLIC
     }
 }
+

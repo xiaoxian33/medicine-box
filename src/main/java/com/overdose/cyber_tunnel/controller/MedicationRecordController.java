@@ -32,6 +32,12 @@ public class MedicationRecordController {
         return ResponseEntity.ok(service.findPublic());
     }
 
+    /** GET /api/medications/stats/od?userId=1 — OD 过量用药统计 */
+    @GetMapping("/stats/od")
+    public ResponseEntity<?> odStats(@RequestParam(defaultValue = "1") Long userId) {
+        return ResponseEntity.ok(service.odStats(userId));
+    }
+
     /** POST /api/medications — 新增服药记录 */
     @PostMapping
     public ResponseEntity<MedicationRecord> create(@RequestBody CreateRequest request) {
@@ -44,6 +50,7 @@ public class MedicationRecordController {
                 request.dosage() != null ? request.dosage() : 1,
                 request.takenAt() != null ? request.takenAt() : LocalDateTime.now(),
                 request.isCommon(),
+                request.isNormalDose(),
                 request.privacy()
         );
         return ResponseEntity.status(HttpStatus.CREATED).body(record);
@@ -75,5 +82,8 @@ public class MedicationRecordController {
 
     public record CreateRequest(Long userId, String medicineName, Integer dosage,
                                  LocalDateTime takenAt, Boolean isCommon,
+                                 Boolean isNormalDose,
                                  MedicationRecord.Privacy privacy) {}
 }
+
+

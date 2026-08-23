@@ -15,6 +15,9 @@ public interface MedicationRecordRepository extends JpaRepository<MedicationReco
     /** 按用户查询所有记录，按服药时间倒序 */
     List<MedicationRecord> findByUserIdOrderByTakenAtDesc(Long userId);
 
+    /** 按用户查询所有记录（顺序无关，供统计用） */
+    List<MedicationRecord> findByUserId(Long userId);
+
     /** 查询公开记录，按时间倒序 */
     List<MedicationRecord> findByPrivacyOrderByTakenAtDesc(MedicationRecord.Privacy privacy);
 
@@ -24,3 +27,4 @@ public interface MedicationRecordRepository extends JpaRepository<MedicationReco
     /** 查询用户已归档的记录 */
     List<MedicationRecord> findByUserIdAndArchivedTrue(Long userId);
 }
+

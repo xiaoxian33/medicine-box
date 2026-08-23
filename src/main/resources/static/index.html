@@ -314,6 +314,8 @@
             #win-log-input { left: 72%; top: 21%; width: 26%; z-index: 12; }
             #win-music { left: 72%; top: 67%; width: 26%; z-index: 15; }
             #win-mood-tracker { left: 72%; top: 82%; width: 26%; z-index: 16; }
+            #win-od-stats { left: 2%; top: 12%; width: 30%; z-index: 18; }
+            #win-plans { left: 44%; top: 28%; width: 28%; z-index: 19; }
 
             #win-main-feed .window-body { height: calc(100% - 97px); }
             #feed-box { height: 100%; }
@@ -358,6 +360,8 @@
             #win-memo { order: 5 !important; }        
             #win-main-feed { order: 6 !important; }   
             #win-music { order: 7 !important; }       
+            #win-od-stats { order: 8 !important; }
+            #win-plans { order: 9 !important; }
 
             #feed-box { max-height: 380px !important; overflow-y: auto !important; }
             #mini-mood-box { max-height: 200px !important; overflow-y: auto !important; }
@@ -384,9 +388,12 @@
             <div style="display: flex; gap: 10px; align-items: center;">
                 <img src="d3abcacf0b7b7479e8a8670e25457021.png" style="width: 45px; height: 45px; border: 2px solid var(--win-border-inner); background: #fff;">
                 <div style="flex-grow: 1; display: flex; flex-direction: column; gap: 4px;">
-                    <div class="status-item" style="border:none; padding:0;"><span style="font-size:11px; width: 30px;">ID:</span><strong>超绝可爱糖🍬</strong></div>
+                    <div class="status-item" style="border:none; padding:0;"><span style="font-size:11px; width: 30px;">ID:</span><strong id="current-user-nickname">加载中...</strong></div>
                     <div class="status-item" style="border:none; padding:0;"><span style="font-size:11px; width: 30px;">状态:</span><strong style="color: var(--win-border-inner);">✓ 社区共享模式</strong></div>
                 </div>
+            </div>
+            <div style="display: flex; gap: 6px; margin-top: 8px;">
+                <button class="retro-btn" id="logout-btn" style="width: 100%; height: 22px; background: rgba(255,195,231,0.6); font-size: 11px;">🚪 退出登录</button>
             </div>
             <div class="status-item" style="margin-top: 4px; font-size: 11px;">
                 <span>距上次记录:</span><strong id="time-elapsed">算命中...</strong>
@@ -436,8 +443,8 @@
                 </div>
             </div>
             <div class="form-group" style="flex-direction: row; align-items: center;">
-                <input type="checkbox" id="common-med-checkbox" style="margin-right: 4px; cursor: pointer;">
-                <label for="common-med-checkbox" style="cursor: pointer; font-size: 11px;">设为常用药</label>
+                <input type="checkbox" id="common-med-checkbox" checked style="margin-right: 4px; cursor: pointer;">
+                <label for="common-med-checkbox" style="cursor: pointer; font-size: 11px; color:#b55252; font-weight:bold;">✓ 本次为正常用药</label>
             </div>
             <button class="submit-button" id="submit-log-btn">生 成 心 得 气 泡</button>
         </div>
@@ -547,6 +554,51 @@
         <div class="retro-bottom-bar"><div class="bottom-bar-block"></div><div class="bottom-bar-dot"></div></div>
     </div>
 
+    <div class="retro-window" id="win-od-stats">
+        <div class="retro-title-bar drag-handle">
+            <div style="display:flex; align-items:center;"><span>OD_OVERVIEW.EXE 📊</span></div>
+            <div class="title-controls"><div class="retro-btn">_</div><div class="retro-btn">X</div></div>
+        </div>
+        <div class="window-body">
+            <div style="font-size: 12px; font-weight: bold; color: #b55252; flex-shrink: 0;">🚨 过量用药(OD)数据看板</div>
+            <div style="font-size: 11px; color: #666; flex-shrink: 0;">今日日期：<strong id="od-today">-</strong></div>
+            <div id="od-stats-body" style="font-size: 11px; color: var(--win-border-inner);">
+                <div style="color:#999;">正在加载统计...</div>
+            </div>
+            <button class="submit-button" onclick="refreshOdStats()" style="flex-shrink:0;">↻ 刷新统计</button>
+        </div>
+        <div class="retro-bottom-bar"><div class="bottom-bar-block"></div><div class="bottom-bar-dot"></div></div>
+    </div>
+
+    <div class="retro-window" id="win-plans">
+        <div class="retro-title-bar drag-handle">
+            <div style="display:flex; align-items:center;"><span>MED_PLAN.EXE 💊</span></div>
+            <div class="title-controls"><div class="retro-btn">_</div><div class="retro-btn">X</div></div>
+        </div>
+        <div class="window-body">
+            <div style="font-size: 12px; font-weight: bold; color: var(--win-border-inner); flex-shrink: 0;">💊 我的用药方案（一键登记）</div>
+            <div class="form-group">
+                <label>方案名称</label>
+                <input type="text" id="plan-name" class="form-input" placeholder="例如：感冒套餐">
+            </div>
+            <div style="font-size: 11px; color: var(--win-border-inner); font-weight: bold;">方案明细（药品 + 片数）</div>
+            <div id="plan-items-editor" style="display:flex; flex-direction:column; gap:4px; max-height: 120px; overflow-y:auto;">
+                <div class="plan-item-row" style="display:flex; gap:4px; flex-shrink:0;">
+                    <input type="text" class="form-input plan-med" style="flex:1.6;" placeholder="药名">
+                    <input type="number" class="form-input plan-dosage" style="flex:0.7;" min="1" value="1" placeholder="片数">
+                    <button class="retro-btn" style="width:22px; height:26px; flex-shrink:0; background:rgba(255,150,150,0.4); color:#b55252;" onclick="addPlanItemRow(this)">＋</button>
+                    <button class="retro-btn" style="width:22px; height:26px; flex-shrink:0; background:rgba(180,180,180,0.4);" onclick="removePlanItemRow(this)">－</button>
+                </div>
+            </div>
+            <button class="submit-button" onclick="savePlan()">💾 保存方案</button>
+            <div style="font-size: 11px; color: var(--win-border-inner); font-weight: bold; margin-top: 4px;">已保存的方案：</div>
+            <div id="plan-list" style="display:flex; flex-direction:column; gap:6px; max-height: 140px; overflow-y:auto;">
+                <div style="color:#999;">加载中...</div>
+            </div>
+        </div>
+        <div class="retro-bottom-bar"><div class="bottom-bar-block"></div><div class="bottom-bar-dot"></div></div>
+    </div>
+
         <div class="retro-alert-overlay" id="custom-alert-overlay">
         <div class="retro-alert-box">
             <div class="retro-alert-title" id="custom-alert-title">SYSTEM_INFO.SYS</div>
@@ -601,15 +653,69 @@
         </div>
 
     <script>
-                const recordDatabase = []; 
-                const moodDatabase = [];  
+                        // ======== 🔌 与后端 API 对接的全局配置 ========
+                // 后端 Spring Boot 跑在 8080 端口，所有接口都在 /api 下
+                const API_BASE = 'http://localhost:8080/api';
+
+                // ======== 👤 当前登录用户（从 localStorage 读取） ========
+                // 登录页(login.html)登录成功后会写 localStorage['currentUser']，
+                // 里面存的是 { id, username, nickname }。这里读取它来决定"我是谁"。
+                const currentUser = (function() {
+                    try {
+                        return JSON.parse(localStorage.getItem('currentUser')) || null;
+                    } catch (e) { return null; }
+                })();
+
+                // 未登录 -> 强制跳回登录页
+                if (!currentUser || !currentUser.id) {
+                    window.location.href = 'login.html';
+                }
+
+                // 当前用户 ID（不再写死，来自登录用户）
+                const CURRENT_USER_ID = currentUser ? currentUser.id : 1;
+                // 当前用户昵称（公开区显示名）
+                const CURRENT_NICKNAME = currentUser ? currentUser.nickname : '社区成员';
+
+                // ======== 🔧 通用请求函数 ========
+                // 用法：request('GET', '/memos', null, cb)
+                //       request('POST', '/memos', {content:'x'}, cb)
+                // 原理：
+                //   fetch(url, {method, headers, body}) 是浏览器内置的 HTTP 客户端。
+                //   - method:  告诉后端要做什么动作（GET读 / POST增 / PATCH改 / DELETE删）
+                //   - headers: 声明发送的是 JSON 数据
+                //   - body:    把 JS 对象 JSON.stringify 成字符串随请求发出（仅在增/改时）
+                //   后端处理完会返回 JSON，.then(res=>res.json()) 把它解析回 JS 对象
+                function request(method, path, bodyData, onSuccess, onError) {
+                    const options = {
+                        method: method,
+                        headers: { 'Content-Type': 'application/json' }
+                    };
+                    // 只有增(POST)/改(PATCH/PUT)才需要带 body
+                    if (bodyData && (method === 'POST' || method === 'PATCH' || method === 'PUT')) {
+                        options.body = JSON.stringify(bodyData);
+                    }
+                    fetch(API_BASE + path, options)
+                        .then(response => {
+                            if (response.status === 204) return null; // 删除成功无返回体
+                            return response.json();
+                        })
+                        .then(result => { if (onSuccess) onSuccess(result); })
+                        .catch(err => {
+                            console.error('API 请求失败:', method, path, err);
+                            if (onError) onError(err);
+                        });
+                }
+
+                // ======== 📦 数据容器（改由数据库驱动） ========
+                let memoLocalData = [];   // 备忘录列表（来自 /api/memos）
+                let recordDatabase = [];  // 用药记录（来自 /api/medications）
+                let moodDatabase = [];    // 心情记录（来自 /api/moods）
+                let medStockDatabase = {};// 药品库存映射 {药名: 数量}（来自 /api/inventory）
+
                 let currentTab = 'private';
-        let medEffectsTimer = null;
-        let memoLocalData = []; // 📝 本地存储的备忘录数组
-        
-                // 💊 药品库存管理
-        let medStockDatabase = {}; // { "药名": 库存数量 }
-        let pendingStockMedData = null; // 等待库存操作的药物完整数据 { type, dosage, time, isCommon, privacy }
+                let medEffectsTimer = null;
+                let pendingStockMedData = null; // 等待库存操作的药物完整数据
+                let publicRecordsCache = []; // 公开记录缓存（来自 /medications/public）
 
         const feedBox = document.getElementById('feed-box');
         const miniMoodBox = document.getElementById('mini-mood-box');
@@ -620,41 +726,117 @@
         const memoInput = document.getElementById('memo-input');
         const memoHistoryBox = document.getElementById('memo-history-box');
 
-        // ======== 📦 localStorage 本地备忘录持久化 ========
-        function loadMemoFromLocal() {
-            try {
-                const saved = localStorage.getItem('memoLocalData');
-                if (saved) {
-                    memoLocalData = JSON.parse(saved);
-                } else {
-                    memoLocalData = [];
-                }
-            } catch (e) {
-                memoLocalData = [];
-            }
-        }
-        function saveMemoToLocal() {
-            localStorage.setItem('memoLocalData', JSON.stringify(memoLocalData));
-        }
-        loadMemoFromLocal(); // 启动时加载
+        // ======== 📄 数据加载：从后端数据库读取（替换原来的 localStorage） ========
+        // 原理：页面每次刷新/打开时，用 GET 向后端把所有数据取回来填进内存数组。
+        //   后端按 userId=1 返回该用户的备忘录/用药/心情/库存列表。
 
-        // ======== 💊 localStorage 药品库存持久化 ========
-        function loadMedStockFromLocal() {
-            try {
-                const saved = localStorage.getItem('medStockDatabase');
-                if (saved) {
-                    medStockDatabase = JSON.parse(saved);
-                } else {
-                    medStockDatabase = {};
-                }
-            } catch (e) {
+        function fetchMemosFromServer() {
+            request('GET', '/memos?userId=' + CURRENT_USER_ID, null, function(list) {
+                memoLocalData = list || [];
+                renderMemoHistory();
+            });
+        }
+
+        function fetchMoodsFromServer() {
+            request('GET', '/moods?userId=' + CURRENT_USER_ID, null, function(list) {
+                // 把后端字段转成前端渲染需要的字段（time / emoji / val）
+                moodDatabase = (list || []).map(function(m) {
+                    return {
+                        time: m.recordedAt ? m.recordedAt.replace('T', ' ').slice(0, 16) : '',
+                        emoji: m.moodEmoji,
+                        val: m.moodValue
+                    };
+                });
+                renderMiniMoods();
+            });
+        }
+
+        function fetchMedicationsFromServer() {
+            request('GET', '/medications?userId=' + CURRENT_USER_ID, null, function(list) {
+                // 把后端数据库字段转成前端渲染需要的老字段（兼容 renderFeed）
+                recordDatabase = (list || []).map(function(rec) {
+                    return {
+                        id: rec.id,
+                        type: rec.medicineName,      // 后端字段 → 前端字段
+                        pills: rec.dosage,            // 服用片数
+                        startTime: rec.takenAt,       // 服药时间
+                        isCommon: false,
+                        isNormalDose: rec.isNormalDose !== false,
+                        privacy: (rec.privacy || '').toLowerCase(),
+                        thoughts: rec.thoughts || '',
+                        archived: rec.archived,
+                        duration: rec.durationHours,
+                        user: CURRENT_NICKNAME
+                    };
+                });
+                renderFeed();
+            });
+        }
+
+        function fetchMedicinesFromServer() {
+            // 后端库存接口在 /api/inventory，字段是 medicineName
+            request('GET', '/inventory?userId=' + CURRENT_USER_ID, null, function(list) {
+                // 把库存列表转成 { 药名: 库存数量 } 的映射
                 medStockDatabase = {};
+                (list || []).forEach(function(med) {
+                    medStockDatabase[med.medicineName] = med.stock;
+                });
+            });
+        }
+
+        // 统一的初始加载入口（页面打开时调用）
+        function loadAllDataFromServer() {
+            fetchMemosFromServer();
+            fetchMoodsFromServer();
+            fetchMedicationsFromServer();
+            fetchMedicinesFromServer();
+            refreshOdStats();
+            loadPlans();
+        }
+        loadAllDataFromServer(); // 启动时从后端拉取全部数据
+
+        // ======== 👤 界面显示当前用户名 + 退出登录 ========
+        document.addEventListener('DOMContentLoaded', () => {
+            const nickEl = document.getElementById('current-user-nickname');
+            if (nickEl) nickEl.textContent = currentUser ? currentUser.nickname : CURRENT_NICKNAME;
+
+            const logoutBtn = document.getElementById('logout-btn');
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', () => {
+                    if (confirm('确定要退出登录吗？')) {
+                        localStorage.removeItem('currentUser');
+                        window.location.href = 'login.html';
+                    }
+                });
             }
+        });
+
+        // ======== 🌐 用户 id → 昵称 映射（公开区显示"谁"的分享） ========
+        // 公开区返回的记录带 userId，我们用它查出对应昵称展示，而不是笼统显示"社区用户"
+        const nicknameById = {};
+        function ensureNicknameMap(callback) {
+            request('GET', '/users', null, function(users) {
+                (users || []).forEach(function(u) { nicknameById[u.id] = u.nickname || ('用户' + u.id); });
+                if (callback) callback();
+            });
         }
+
+        // ======== 💊 库存同步到后端（替换原来的 localStorage） ========
+        // 原理：每次改库存后，用 PUT /api/inventory/{药品名} 把该药品的库存绝对值写回数据库。
+        function syncStockToServer(medName, newStock) {
+            request('PUT', '/inventory/' + encodeURIComponent(medName), {
+                userId: CURRENT_USER_ID,
+                stock: newStock
+            }, function() {});
+        }
+
+        // 兼容旧代码的「保存库存」函数：更新缓存 + 同步到后端
         function saveMedStockToLocal() {
-            localStorage.setItem('medStockDatabase', JSON.stringify(medStockDatabase));
+            // 遍历内存里的库存映射，全部同步到后端
+            Object.keys(medStockDatabase).forEach(function(medName) {
+                syncStockToServer(medName, medStockDatabase[medName]);
+            });
         }
-        loadMedStockFromLocal(); // 启动时加载
 
         function showRetroAlert(title, text) {
             document.getElementById('custom-alert-title').textContent = title;
@@ -820,16 +1002,13 @@
                 deleteBtn.textContent = '✕ 删除';
                 deleteBtn.onclick = (e) => {
                     e.stopPropagation();
-                    // 找到在原始数组中的索引
-                    const realIndex = memoLocalData.findIndex(m => 
-                        m.createdAt === memo.createdAt && m.content === memo.content
-                    );
-                    if (realIndex !== -1) {
-                        memoLocalData.splice(realIndex, 1);
-                        saveMemoToLocal();
+                    // 用后端返回的唯一 id 删除，替代原来的 createdAt+content 匹配
+                    request('DELETE', '/memos/' + memo.id, null, function() {
+                        // 从本地数组移除后重渲染
+                        memoLocalData = memoLocalData.filter(m => m.id !== memo.id);
                         renderMemoHistory();
                         showRetroAlert('DELETED 🗑️', '已删除该条记录。');
-                    }
+                    });
                 };
                 
                 timeDiv.appendChild(timeText);
@@ -846,35 +1025,36 @@
             });
         }
 
-        // ======== 💾 保存到本地（不依赖后端） ========
+        // ======== 💾 保存备忘录（发送到后端数据库） ========
         function saveMemoToLocalStorage() {
             const content = memoInput.value.trim();
             if (!content) {
                 showRetroAlert('MEMO 📌', '先写一点内容再保存哦。');
                 return;
             }
-            memoLocalData.unshift({
-                id: Date.now(),
-                content: content,
-                createdAt: new Date().toISOString()
+            // POST 到后端 /memos，成功后拿到后端分配的 id
+            request('POST', '/memos', { userId: CURRENT_USER_ID, content: content }, function(savedMemo) {
+                memoLocalData.unshift(savedMemo); // 把后端返回的完整记录加进数组（含 id、createdAt）
+                memoInput.value = '';
+                showRetroAlert('SUCCESS 💾', '随手记录已保存到数据库！可以在历史记录里查看。');
+                switchMemoTab('history');
+            }, function() {
+                showRetroAlert('ERROR ❌', '保存失败，请确认后端服务已启动。');
             });
-            saveMemoToLocal();
-            memoInput.value = '';
-            showRetroAlert('SUCCESS 💾', '随手记录已保存到本地！可以在历史记录里查看。');
-            switchMemoTab('history');
         }
 
-        // ======== 🗑️ 清空全部本地记录 ========
+        // ======== 🗑️ 清空全部备忘录（调用后端 DELETE 全部） ========
         function clearAllLocalMemos() {
             if (memoLocalData.length === 0) {
                 showRetroAlert('INFO 🗑️', '本地没有任何记录可清空。');
                 return;
             }
-            if (confirm('确定要清空所有本地记录吗？此操作不可恢复！')) {
-                memoLocalData = [];
-                saveMemoToLocal();
-                renderMemoHistory();
-                showRetroAlert('SUCCESS 🗑️', '已清空所有本地记录。');
+            if (confirm('确定要清空所有记录吗？此操作不可恢复！')) {
+                request('DELETE', '/memos?userId=' + CURRENT_USER_ID, null, function() {
+                    memoLocalData = [];
+                    renderMemoHistory();
+                    showRetroAlert('SUCCESS 🗑️', '已清空所有记录。');
+                });
             }
         }
 
@@ -897,12 +1077,29 @@
                 document.getElementById('tab-private').classList.add('active-tab');
                 panelTitle.textContent = "飞行状态控制盘 🛸";
                 endTripBtn.style.display = "block";
+                renderFeed(); // 渲染本地（当前用户）记录
             } else {
                 document.getElementById('tab-public').classList.add('active-tab');
                 panelTitle.textContent = "全员健康状态共享流 🌐";
                 endTripBtn.style.display = "none";
+                // 🌐 公开区：从后端拉取所有用户的公开记录
+                ensureNicknameMap(function() {
+                    request('GET', '/medications/public', null, function(list) {
+                        publicRecordsCache = (list || []).map(function(rec) {
+                            return {
+                                id: rec.id, type: rec.medicineName, pills: rec.dosage,
+                                startTime: rec.takenAt, isCommon: false,
+                                isNormalDose: rec.isNormalDose !== false,
+                                privacy: (rec.privacy || '').toLowerCase(),
+                                thoughts: rec.thoughts || '',
+                                archived: rec.archived, duration: rec.durationHours,
+                                user: nicknameById[rec.userId] || ('用户' + rec.userId) // 显示真实昵称
+                            };
+                        });
+                        renderFeed();
+                    });
+                });
             }
-            renderFeed();
         }
 
                 // 🟢 核心控制函数：整合药物和心情状态，统一管理动画挂载
@@ -947,7 +1144,7 @@
         }
 
         function updateDashboard() {
-            const privateRecords = recordDatabase.filter(r => r.user === undefined || r.user === "超绝可爱糖🍬");
+            const privateRecords = recordDatabase.filter(r => r.user === undefined || r.user === CURRENT_NICKNAME);
             if (privateRecords.length === 0) {
                 priorityAlert.style.display = 'block'; 
                 timeElapsedSpan.textContent = '暂无记录';
@@ -968,9 +1165,8 @@
 
         function renderFeed() {
             feedBox.innerHTML = '';
-            let filteredData = (currentTab === 'private') 
-                ? recordDatabase.filter(item => item.user === undefined || item.user === "超绝可爱糖🍬")
-                : recordDatabase.filter(item => item.privacy === "public");
+            // 私人 Tab 显示当前用户记录；公开 Tab 显示后端拉取的公开记录
+            let filteredData = (currentTab === 'private') ? recordDatabase : publicRecordsCache;
 
             if (filteredData.length === 0) {
                 feedBox.innerHTML = `<div style="text-align:center; padding-top:40px; color:#5b657e; font-size:13px;">空空如也哦 🎈</div>`;
@@ -980,10 +1176,10 @@
             filteredData.forEach(item => {
                 const bubble = document.createElement('div');
                 let extraClass = item.archived ? 'bubble-archived' : '';
-                const userTag = item.user || "超绝可爱糖🍬";
+                const userTag = item.user || CURRENT_NICKNAME;
                 const privacyTag = item.privacy === 'public' ? '🌐 公开' : '🔒 私密';
                 
-                let contentHTML = (item.archived || userTag !== "超绝可爱糖🍬")
+                let contentHTML = (item.archived || userTag !== CURRENT_NICKNAME)
                     ? `<div class="locked-text">${item.thoughts || '这个小伙伴没有写下详细心得描述~'}</div>${item.archived ? `<div class="archived-stamp">已封存 🛬 历时 ${item.duration || '0'} 小时</div>` : ''}`
                     : `<textarea class="bubble-thoughts-input" placeholder="为这次重要的记录写下详细的描述吧..." oninput="updateThoughts(${item.id}, this.value)">${item.thoughts}</textarea>`;
 
@@ -991,10 +1187,19 @@
                     bubble.className = `bubble-card bubble-mood ${extraClass}`;
                     bubble.innerHTML = `<div class="bubble-meta"><span>👤 ${userTag}</span><span>🕒 ${item.startTime.replace('T', ' ')}</span><span>心情: ${item.moodEmoji} (${item.moodVal}%)</span></div>${contentHTML}`;
                 } else {
-                    bubble.className = `bubble-card ${item.isCommon ? 'bubble-common' : 'bubble-od'} ${extraClass}`;
-                    bubble.innerHTML = `<div class="bubble-meta"><span>👤 <strong>${userTag}</strong></span><span>💊 <strong>${item.type}</strong></span><span>📦 <strong>${item.pills || 0} 片</strong></span><span>📦 库存 <strong>${item.remain} 片</strong></span><span style="color:var(--win-border-inner);">【${privacyTag}】</span></div>${contentHTML}`;
+                    const isOd = item.isNormalDose === false;
+                    const doseTag = isOd ? '🚨 OD' : '✓ 正常';
+                    const doseColor = isOd ? 'color:#b55252;' : 'color:#4a8c5a;';
+                    bubble.className = `bubble-card ${isOd ? 'bubble-od' : 'bubble-common'} ${extraClass}`;
+                    bubble.innerHTML = `<div class="bubble-meta"><span>👤 <strong>${userTag}</strong></span><span>💊 <strong>${item.type}</strong></span><span>📦 <strong>${item.pills || 0} 片</strong></span><span>📦 库存 <strong>${item.remain} 片</strong></span><span style="${doseColor}; font-weight:900;">${doseTag}</span><span style="color:var(--win-border-inner);">【${privacyTag}】</span></div>${contentHTML}
+                        <div class="bubble-social" style="margin-top:8px; border-top:1px dashed var(--win-border-inner); padding-top:6px;">
+                            <span class="social-like" style="cursor:pointer; font-size:11px; user-select:none;" data-liked="false" onclick="toggleLike(${item.id}, this)">🤍 赞(<span class="like-count">0</span>)</span>
+                            <span class="social-comment-toggle" style="cursor:pointer; font-size:11px; margin-left:10px; user-select:none;" onclick="toggleCommentBox(${item.id}, this)">💬 评论(<span class="comment-count">0</span>)</span>
+                            <div class="comment-box" style="display:none; margin-top:6px;"></div>
+                        </div>`;
                 }
                 feedBox.appendChild(bubble);
+                if (!item.isMoodOnly) loadSocialForRecord(item.id);
             });
         }
 
@@ -1014,20 +1219,250 @@
 
         window.updateThoughts = function(id, newText) {
             const record = recordDatabase.find(r => r.id === id);
-            if(record && !record.archived) record.thoughts = newText;
+            if(record && !record.archived) {
+                record.thoughts = newText;
+                // PATCH 到后端保存心得（后端用 /{id}/thoughts）
+                request('PATCH', '/medications/' + id + '/thoughts', { thoughts: newText }, function() {});
+            }
         };
 
-        document.getElementById('end-trip-btn').addEventListener('click', () => {
-            let archivedCount = 0;
-            recordDatabase.forEach(item => {
-                if ((item.user === undefined || item.user === "超绝可爱糖🍬") && !item.archived) {
-                    item.archived = true;
-                    item.duration = Math.max(0, (Date.now() - new Date(item.startTime).getTime()) / (1000 * 60 * 60)).toFixed(1);
-                    archivedCount++;
+        // ======== 💬 点赞 / 评论（社交互动） ========
+        // 为某条记录异步加载点赞状态和评论数
+        function loadSocialForRecord(recordId) {
+            const bubbleSocial = (function(){
+                let el = null;
+                document.querySelectorAll('.bubble-social').forEach(function(s){
+                    const likeSpan = s.querySelector('.social-like');
+                    if (likeSpan && likeSpan.getAttribute('onclick') === 'toggleLike(' + recordId + ', this)') el = s;
+                });
+                return el;
+            })();
+            if (!bubbleSocial) return;
+
+            // 点赞状态
+            request('GET', '/social/like/status?recordId=' + recordId + '&userId=' + CURRENT_USER_ID, null, function(status) {
+                const likeSpan = bubbleSocial.querySelector('.social-like');
+                const countSpan = bubbleSocial.querySelector('.like-count');
+                const liked = status && status.liked;
+                likeSpan.dataset.liked = liked ? 'true' : 'false';
+                likeSpan.innerHTML = (liked ? '❤️ 已赞(' : '🤍 赞(') + '<span class="like-count">' + (status ? status.count : 0) + '</span>)';
+            });
+
+            // 评论数
+            request('GET', '/social/comments?recordId=' + recordId, null, function(list) {
+                const countSpan = bubbleSocial.querySelector('.comment-count');
+                if (countSpan) countSpan.textContent = (list || []).length;
+            });
+        }
+
+        // 切换点赞
+        window.toggleLike = function(recordId, likeSpan) {
+            request('POST', '/social/like', { recordId: recordId, userId: CURRENT_USER_ID }, function(res) {
+                const countSpan = likeSpan.querySelector('.like-count');
+                if (res && res.liked) {
+                    likeSpan.dataset.liked = 'true';
+                    likeSpan.innerHTML = '❤️ 已赞(<span class="like-count">' + (res.count || 0) + '</span>)';
+                } else {
+                    likeSpan.dataset.liked = 'false';
+                    likeSpan.innerHTML = '🤍 赞(<span class="like-count">' + (res.count || 0) + '</span>)';
                 }
             });
-            if (archivedCount > 0) { showRetroAlert('SUCCESS 🛬', `成功归档！本次封存了私人框里的 ${archivedCount} 条数据喵~`); updateDashboard(); } 
-            else { showRetroAlert('INFO 📌', '当前个人框里没有进行中的记录哦~'); }
+        };
+
+        // 展开/收起评论区
+        window.toggleCommentBox = function(recordId, toggleSpan) {
+            const social = toggleSpan.closest('.bubble-social');
+            const box = social.querySelector('.comment-box');
+            if (box.style.display === 'none') {
+                box.style.display = 'block';
+                renderComments(recordId, box);
+            } else {
+                box.style.display = 'none';
+            }
+        };
+
+        // 渲染某条记录的评论列表
+        function renderComments(recordId, box) {
+            box.innerHTML = '<div style="font-size:10px; color:#999;">加载中...</div>';
+            request('GET', '/social/comments?recordId=' + recordId, null, function(list) {
+                const items = list || [];
+                let html = '';
+                if (items.length === 0) {
+                    html = '<div style="font-size:10px; color:#999; padding:4px 0;">还没有评论，快来抢沙发 💬</div>';
+                } else {
+                    html = items.map(function(c) {
+                        const isMine = c.userId === CURRENT_USER_ID;
+                        return '<div style="display:flex; justify-content:space-between; align-items:flex-start; border-bottom:1px dotted var(--win-border-inner); padding:4px 0;">' +
+                            '<div style="flex:1; font-size:11px;"><strong style="color:var(--win-border-inner);">' + (c.userNickname || ('用户' + c.userId)) + '</strong>：' + (c.content || '') +
+                            (isMine ? '<div style="margin-top:2px;"><button style="font-size:9px; color:#b55252; cursor:pointer; border:1px solid #b55252; background:transparent; border-radius:3px;" onclick="deleteComment(' + c.id + ',' + recordId + ', this)">✕ 删除</button></div>' : '') +
+                            '</div></div>';
+                    }).join('');
+                }
+                box.innerHTML = html +
+                    '<div style="display:flex; gap:4px; margin-top:6px;">' +
+                    '<input class="form-input" style="height:22px; flex:1; font-size:11px;" placeholder="写下你的评论..." onkeydown="if(event.key===\'Enter\')submitComment(' + recordId + ', this)">' +
+                    '<button class="retro-btn" style="width:auto; padding:0 8px; height:22px; font-size:11px; background:var(--btn-pink);" onclick="submitComment(' + recordId + ', this.previousSibling)">发送</button>' +
+                    '</div>';
+            });
+        }
+
+        // 提交评论
+        window.submitComment = function(recordId, inputEl) {
+            const content = (inputEl.value || '').trim();
+            if (!content) return;
+            request('POST', '/social/comments', {
+                recordId: recordId, userId: CURRENT_USER_ID, nickname: CURRENT_NICKNAME, content: content
+            }, function() {
+                // 刷新评论区和计数
+                let socialEl = null;
+                document.querySelectorAll('.bubble-social').forEach(function(s){
+                    if (s.querySelector('.social-comment-toggle') && s.querySelector('.social-comment-toggle').getAttribute('onclick') === 'toggleCommentBox(' + recordId + ', this)') socialEl = s;
+                });
+                if (socialEl) {
+                    const box = socialEl.querySelector('.comment-box');
+                    renderComments(recordId, box);
+                    request('GET', '/social/comments?recordId=' + recordId, null, function(list) {
+                        const c = socialEl.querySelector('.comment-count');
+                        if (c) c.textContent = (list || []).length;
+                    });
+                }
+            });
+        };
+
+        // 删除评论
+        window.deleteComment = function(commentId, recordId, btnEl) {
+            request('DELETE', '/social/comments/' + commentId, null, function() {
+                const box = btnEl.closest('.comment-box');
+                if (box) renderComments(recordId, box);
+            });
+        };
+
+        // ======== 📊 OD 过量用药统计看板 ========
+        function refreshOdStats() {
+            const todayEl = document.getElementById('od-today');
+            if (todayEl) todayEl.textContent = new Date().toLocaleDateString('zh-CN');
+            request('GET', '/medications/stats/od?userId=' + CURRENT_USER_ID, null, function(stats) {
+                const body = document.getElementById('od-stats-body');
+                if (!body) return;
+                if (!stats || stats.odDays7 === undefined) { body.innerHTML = '<div style="color:#b55252;">暂无 OD 数据</div>'; return; }
+                body.innerHTML =
+                    '<div class="status-item"><span>近 7 天 OD 次数：</span><strong style="color:#b55252;">' + stats.odDays7 + ' 次</strong></div>' +
+                    '<div class="status-item"><span>近 14 天 OD 次数：</span><strong style="color:#b55252;">' + stats.odDays14 + ' 次</strong></div>' +
+                    '<div class="status-item"><span>近 30 天 OD 次数：</span><strong style="color:#b55252;">' + stats.odDays30 + ' 次</strong></div>' +
+                    '<div class="status-item"><span>本周 OD：</span><strong>' + stats.weekCurrent + ' 次</strong></div>' +
+                    '<div class="status-item"><span>上周 OD：</span><strong>' + stats.weekPrevious + ' 次</strong></div>' +
+                    '<div class="status-item" style="border:none;"><span>趋势：</span><strong style="color:var(--win-border-inner);">' + (stats.trend || '') + '</strong></div>' +
+                    '<div class="status-item" style="border:none;"><span>连续记录天数：</span><strong>' + (stats.consecutiveDays || 0) + ' 天</strong></div>';
+            }, function() {
+                const b = document.getElementById('od-stats-body');
+                if (b) b.innerHTML = '<div style="color:#b55252;">统计加载失败，请确认后端已启动</div>';
+            });
+        }
+
+        // ======== 💊 用药方案管理 ========
+        function addPlanItemRow(parent) {
+            const editor = parent && parent.id === 'plan-items-editor' ? parent : document.getElementById('plan-items-editor');
+            const row = document.createElement('div');
+            row.className = 'plan-item-row';
+            row.style.display = 'flex'; row.style.gap = '4px'; row.style.flexShrink = '0';
+            row.innerHTML = '<input type="text" class="form-input plan-med" style="flex:1.6;" placeholder="药名">' +
+                '<input type="number" class="form-input plan-dosage" style="flex:0.7;" min="1" value="1" placeholder="片数">' +
+                '<button type="button" class="retro-btn" style="width:22px; height:26px; flex-shrink:0; background:rgba(255,150,150,0.4); color:#b55252;" onclick="addPlanItemRow(this)">＋</button>' +
+                '<button type="button" class="retro-btn" style="width:22px; height:26px; flex-shrink:0; background:rgba(180,180,180,0.4);" onclick="removePlanItemRow(this)">－</button>';
+            editor.appendChild(row);
+        }
+        function removePlanItemRow(btn) {
+            const editor = document.getElementById('plan-items-editor');
+            if (editor.children.length > 1) { btn.closest('.plan-item-row').remove(); }
+            else { btn.closest('.plan-item-row').querySelector('.plan-med').value = ''; btn.closest('.plan-item-row').querySelector('.plan-dosage').value = '1'; }
+        }
+        function collectPlanItems() {
+            const items = [];
+            document.querySelectorAll('#plan-items-editor .plan-item-row').forEach(function(row) {
+                const name = (row.querySelector('.plan-med').value || '').trim();
+                const dose = parseInt(row.querySelector('.plan-dosage').value) || 1;
+                if (name) items.push({ name: name, dose: dose });
+            });
+            return items;
+        }
+        function savePlan() {
+            const name = (document.getElementById('plan-name').value || '').trim();
+            const items = collectPlanItems();
+            if (!name || items.length === 0) { showRetroAlert('WARNING ⚠️', '请填写方案名称和至少一种药。'); return; }
+            const itemsArr = items.map(function(it){ return [it.name, String(it.dose)]; });
+            request('POST', '/plans', { userId: CURRENT_USER_ID, planName: name, note: '', items: itemsArr }, function() {
+                showRetroAlert('SUCCESS 💊', '用药方案已保存！');
+                document.getElementById('plan-name').value = '';
+                const editor = document.getElementById('plan-items-editor');
+                editor.innerHTML = '';
+                addPlanItemRow(editor);
+                loadPlans();
+            }, function() {
+                showRetroAlert('ERROR ❌', '方案保存失败，请确认后端已启动。');
+            });
+        }
+        function loadPlans() {
+            request('GET', '/plans?userId=' + CURRENT_USER_ID, null, function(list) { renderPlans(list || []); });
+        }
+        function renderPlans(plans) {
+            const box = document.getElementById('plan-list');
+            if (!box) return;
+            if (plans.length === 0) { box.innerHTML = '<div style="color:#999;">还没有方案，先在上方创建一个吧～</div>'; return; }
+            box.innerHTML = plans.map(function(p) {
+                const detail = (p.items || []).map(function(it){ return it.medicineName + '×' + it.dosage; }).join('、');
+                return '<div style="border:1px dashed var(--win-border-inner); border-radius:4px; padding:6px; background:rgba(255,255,255,0.3);">' +
+                    '<div style="display:flex; justify-content:space-between; align-items:center;">' +
+                    '<strong style="font-size:11px; color:var(--win-border-inner);">' + p.planName + '</strong>' +
+                    '<button type="button" class="retro-btn" style="width:auto; padding:0 8px; height:20px; font-size:10px; background:rgba(180,220,180,0.6);" onclick="applyPlan(' + p.id + ')">📥 一键登记</button>' +
+                    '</div>' +
+                    '<div style="font-size:10px; color:#777; margin-top:3px;">' + detail + '</div>' +
+                    '</div>';
+            }).join('') +
+            '<div style="text-align:right; margin-top:4px;"><button type="button" class="retro-btn" style="width:auto; padding:0 8px; height:20px; font-size:10px; color:#b55252; border-color:#b55252;" onclick="clearAllPlans()">🗑 清空所有方案</button></div>';
+        }
+        // 一键登记：把方案里的每种药按当前时间各记一条记录
+        function applyPlan(planId) {
+            request('GET', '/plans?userId=' + CURRENT_USER_ID, null, function(list) {
+                const plan = (list || []).find(function(p){ return p.id == planId; });
+                if (!plan || !plan.items || plan.items.length === 0) { showRetroAlert('INFO 💊', '该方案没有可登记的药物。'); return; }
+                const now = new Date();
+                const timeStr = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' + String(now.getDate()).padStart(2,'0') +
+                    'T' + String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0') + ':00';
+                let done = 0;
+                plan.items.forEach(function(it) {
+                    request('POST', '/medications', {
+                        userId: CURRENT_USER_ID, medicineName: it.medicineName, dosage: it.dosage,
+                        takenAt: timeStr, isCommon: false, isNormalDose: true, privacy: 'PRIVATE'
+                    }, function() {
+                        done++;
+                        if (done >= plan.items.length) {
+                            showRetroAlert('SUCCESS 💊', '已按「' + plan.planName + '」一键登记全部药物！');
+                            fetchMedicationsFromServer();
+                            refreshOdStats();
+                        }
+                    });
+                });
+            });
+        }
+        function clearAllPlans() {
+            if (!confirm('确定要清空所有用药方案吗？')) return;
+            request('GET', '/plans?userId=' + CURRENT_USER_ID, null, function(list) {
+                (list || []).forEach(function(p){ request('DELETE', '/plans/' + p.id, null, function(){}); });
+                setTimeout(loadPlans, 300);
+            });
+        }
+
+        document.getElementById('end-trip-btn').addEventListener('click', () => {
+            // 调用后端 /medications/archive 归档所有未归档记录
+            request('POST', '/medications/archive?userId=' + CURRENT_USER_ID, null, function(res) {
+                const archivedCount = (res && res.archivedCount) || 0;
+                if (archivedCount > 0) {
+                    showRetroAlert('SUCCESS 🛬', `成功归档！本次封存了私人框里的 ${archivedCount} 条数据喵~`);
+                    fetchMedicationsFromServer(); // 重新拉取，刷新归档状态
+                } else {
+                    showRetroAlert('INFO 📌', '当前个人框里没有进行中的记录哦~');
+                }
+            });
         });
 
                                                                 // 💡 药物生成逻辑：点击生成心得气泡发送后，符合条件才开始计时震颤两分钟
@@ -1036,7 +1471,7 @@
                     const typeInput = document.getElementById('med-type').value.trim();
                     const pillsInput = parseInt(document.getElementById('med-pills').value);
                     const timeInput = getSelectedDateTime(); // 改用自定义日历的值
-                    const isCommon = document.getElementById('common-med-checkbox').checked;
+                    const isNormalDose = document.getElementById('common-med-checkbox').checked;
                     const privacyInput = document.querySelector('input[name="med-privacy"]:checked').value;
 
                     if (!typeInput || isNaN(pillsInput) || pillsInput < 1 || !timeInput) {
@@ -1063,44 +1498,74 @@
                         // 用户确认调整后，用调整后的库存
                         medStockDatabase[typeInput] = adjustedStock;
                         saveMedStockToLocal();
-                        createMedBubble(typeInput, timeInput, pillsInput, adjustedStock, isCommon, privacyInput);
+                        createMedBubble(typeInput, timeInput, pillsInput, adjustedStock, isNormalDose, privacyInput);
                     });
                 });
 
-                // 抽取创建药物气泡的独立函数
-                function createMedBubble(typeInput, timeInput, pillsNum, stockNum, isCommon, privacyInput) {
-                                        // 1. 先把数据成功推入队列并发送大框
-                    recordDatabase.unshift({
-                        id: Date.now(), isMoodOnly: false, type: typeInput, startTime: timeInput,
-                        remain: stockNum, pills: pillsNum, isCommon: isCommon, privacy: privacyInput, thoughts: "", archived: false, user: "超绝可爱糖🍬"
-                    });
+                // 抽取创建药物气泡的独立函数（数据存入后端数据库）
+                function createMedBubble(typeInput, timeInput, pillsNum, stockNum, isNormalDose, privacyInput) {
+                    // 1. POST 到后端 /medications，成功后用后端返回的数据气泡
+                    //    注意：后端 privacy 是枚举，值为大写 PRIVATE/PUBLIC；我们统一发大写
+                    request('POST', '/medications', {
+                        userId: CURRENT_USER_ID,
+                        medicineName: typeInput,
+                        dosage: pillsNum,
+                        // 后端要求 yyyy-MM-dd'T'HH:mm:ss 格式（含秒），前端表单只有时分，补上 :00
+                        takenAt: timeInput + ':00',
+                        isCommon: false,
+                        isNormalDose: isNormalDose,
+                        privacy: privacyInput === 'public' ? 'PUBLIC' : 'PRIVATE'
+                    }, function(savedRecord) {
+                        // 转成前端渲染需要的字段（后端返回的是大写枚举，转成小写便于页面判断）
+                        recordDatabase.unshift({
+                            id: savedRecord.id, isMoodOnly: false, type: savedRecord.medicineName,
+                            startTime: savedRecord.takenAt, remain: stockNum, pills: savedRecord.dosage,
+                            isCommon: false,
+                            isNormalDose: savedRecord.isNormalDose !== false,
+                            privacy: (savedRecord.privacy || '').toLowerCase(),
+                            thoughts: '', archived: savedRecord.archived, user: CURRENT_NICKNAME
+                        });
 
-                    // 2. 🟢 过量特效：一次性服用 >= 10 片触发两分钟震颤
-                    if (pillsNum >= 10) {
-                        if (medEffectsTimer) clearTimeout(medEffectsTimer);
-                        isMedShakingActive = true;
-                        refreshVisualState();
-                        medEffectsTimer = setTimeout(() => {
-                            isMedShakingActive = false;
+                        // 2. 🟢 过量特效：本次为 OD（isNormalDose=false）触发两分钟全屏震颤
+                        if (isNormalDose === false) {
+                            if (medEffectsTimer) clearTimeout(medEffectsTimer);
+                            isMedShakingActive = true;
                             refreshVisualState();
-                        }, 120000);
-                    }
+                            medEffectsTimer = setTimeout(() => {
+                                isMedShakingActive = false;
+                                refreshVisualState();
+                            }, 120000);
+                        }
 
-                    // 3. 清空输入框表单
-                    document.getElementById('med-type').value = '';
-                    document.getElementById('med-pills').value = 1;
-            
-                    updateDashboard();
-                    showRetroAlert('SUCCESS 💊', privacyInput === 'public' ? '记录生成成功！已同步发至【公开药物记录区】共享流。' : '记录成功！已安全放入您的私密专属区。');
+                        // 3. 清空输入框表单
+                        document.getElementById('med-type').value = '';
+                        document.getElementById('med-pills').value = 1;
+
+                        updateDashboard();
+                        showRetroAlert('SUCCESS 💊', privacyInput === 'public' ? '记录生成成功！已同步发至【公开药物记录区】共享流。' : '记录成功！已安全放入您的私密专属区。');
+                    }, function() {
+                        showRetroAlert('ERROR ❌', '服药记录保存失败，请确认后端服务已启动。');
+                    });
                 }
 
                 document.getElementById('record-mood-btn').addEventListener('click', () => {
-            const now = new Date();
-            const timeStr = now.toISOString().slice(0,16).replace('T', ' ');
-
-            moodDatabase.unshift({ time: timeStr, emoji: moodEmojiDisplay.textContent, val: moodSlider.value });
-
-            updateDashboard(); showRetroAlert('SYSTEM 💖', '当前状态数据保存成功！');
+            // POST 心情记录到后端 /moods
+            request('POST', '/moods', {
+                userId: CURRENT_USER_ID,
+                moodValue: parseInt(moodSlider.value),
+                moodEmoji: moodEmojiDisplay.textContent
+            }, function(savedMood) {
+                // 转成前端渲染字段
+                moodDatabase.unshift({
+                    time: savedMood.recordedAt ? savedMood.recordedAt.replace('T', ' ').slice(0,16) : new Date().toISOString().slice(0,16).replace('T',' '),
+                    emoji: moodEmojiDisplay.textContent,
+                    val: moodSlider.value
+                });
+                updateDashboard();
+                showRetroAlert('SYSTEM 💖', '当前状态数据已保存到数据库！');
+            }, function() {
+                showRetroAlert('ERROR ❌', '心情记录保存失败，请确认后端服务已启动。');
+            });
         });
 
         let zIndexCounter = 20;
